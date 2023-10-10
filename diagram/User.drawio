@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-10-10T18:56:52.513Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36" etag="w8hgpEVkeuGQY4uksHer" version="22.0.4" type="github">
+<mxfile host="app.diagrams.net" modified="2023-10-10T18:58:01.675Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36" etag="fs1BxRuAUuZOFME8umMd" version="22.0.4" type="github">
   <diagram name="Page-1" id="a7904f86-f2b4-8e86-fa97-74104820619b">
-    <mxGraphModel dx="2693" dy="1692" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
+    <mxGraphModel dx="2089" dy="1373" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -132,10 +132,30 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="LfVO2MUX2bvUjFJGlF8E-60" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="LfVO2MUX2bvUjFJGlF8E-12" target="LfVO2MUX2bvUjFJGlF8E-47" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="488" />
+              <mxPoint x="110" y="575" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HKZq3aPh20wgz_vlOcmp-62" value="Require phone" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="LfVO2MUX2bvUjFJGlF8E-60">
+          <mxGeometry x="0.4692" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="LfVO2MUX2bvUjFJGlF8E-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="LfVO2MUX2bvUjFJGlF8E-12" target="LfVO2MUX2bvUjFJGlF8E-59" edge="1">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="487" />
+              <mxPoint x="110" y="640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HKZq3aPh20wgz_vlOcmp-64" value="Phone/Email" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="LfVO2MUX2bvUjFJGlF8E-61">
+          <mxGeometry x="0.7223" y="1" relative="1" as="geometry">
+            <mxPoint x="24" y="-1" as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="LfVO2MUX2bvUjFJGlF8E-71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="LfVO2MUX2bvUjFJGlF8E-12" target="LfVO2MUX2bvUjFJGlF8E-70" edge="1">
           <mxGeometry relative="1" as="geometry" />
@@ -202,7 +222,7 @@
           <mxGeometry x="330" y="360" width="70" height="60" as="geometry" />
         </mxCell>
         <mxCell id="LfVO2MUX2bvUjFJGlF8E-47" value="Delete Account" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-40" y="560" width="100" height="30" as="geometry" />
+          <mxGeometry x="-120" y="560" width="100" height="30" as="geometry" />
         </mxCell>
         <mxCell id="LfVO2MUX2bvUjFJGlF8E-49" value="update cart" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="860" y="670" width="100" height="30" as="geometry" />
@@ -253,7 +273,7 @@
           <mxGeometry x="710" y="670" width="80" height="30" as="geometry" />
         </mxCell>
         <mxCell id="LfVO2MUX2bvUjFJGlF8E-59" value="Fogot password" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-40" y="610" width="100" height="30" as="geometry" />
+          <mxGeometry x="-120" y="625" width="100" height="30" as="geometry" />
         </mxCell>
         <mxCell id="LfVO2MUX2bvUjFJGlF8E-63" value="view cart" style="whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
           <mxGeometry x="860" y="620" width="100" height="30" as="geometry" />
