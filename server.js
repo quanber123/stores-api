@@ -11,29 +11,19 @@ const connectDb = async () => {
 connectDb();
 
 const createUser = async () => {
-  const user = await User.create({
-    name: 'Hung le',
-    age: 20,
-    email: 'hungle@gmail.com',
-  });
-  console.log(user);
-  await user.save();
-  console.log(user);
-  // try {
-  //   // const user = await User.where('name')
-  //   //   .equals('Tran Quan')
-  //   //   .populate('bestFriend')
-  //   //   .limit(2);
-  //   // console.log(user);
-  //   // const user = await User.findByName('Tran Quan');
-  //   const user = await User.findOne({
-  //     name: 'Tran Quan',
-  //     email: 'quantm103@gmail.com',
-  //   });
-  //   console.log(user.nameEmail);
-  // } catch (error) {
-  //   console.log(error.message);
-  // }
+  const itemsOfPage = 5;
+  let currPage = 1;
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalPages = Math.ceil(totalUsers / itemsOfPage);
+    const user = await User.find()
+      .skip((currPage - 1) * itemsOfPage)
+      .limit(itemsOfPage);
+    console.log(user);
+    console.log(totalPages);
+  } catch (error) {
+    console.log(error.message);
+  }
 };
 
 createUser();
