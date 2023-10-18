@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-const adminSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -42,4 +42,4 @@ const adminSchema = new mongoose.Schema({
   },
 });
 
-export default mongoose.model('Admin', adminSchema);
+export default mongoose.model('User', userSchema);
