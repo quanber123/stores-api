@@ -13,5 +13,9 @@ config();
 const routerProduct = Router();
 routerProduct.use(json());
 const end_point = process.env.END_POINT_PRODUCT;
-routerProduct.route(end_point).get(getAllProducts).get(searchProducts);
+routerProduct
+  .route(end_point)
+  .get(getAllProducts)
+  .get(searchProducts)
+  .post(createProduct);
 export default routerProduct;

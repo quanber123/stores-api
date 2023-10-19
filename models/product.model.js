@@ -1,41 +1,41 @@
 import mongoose from 'mongoose';
+
+const variantSchema = new mongoose.Schema({
+  size: {
+    type: String,
+    lowercase: true,
+    required: true,
+  },
+  color: {
+    type: String,
+    lowercase: true,
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    default: 0,
+    required: true,
+  },
+  inStock: {
+    type: Boolean,
+    default: true,
+    required: true,
+  },
+  description: String,
+  stores: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' },
+});
+
 const detailSchema = new mongoose.Schema({
-  variants: [
-    {
-      size: {
-        type: String,
-        lowercase: true,
-        required: true,
-      },
-      color: {
-        type: String,
-        lowercase: true,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        default: 0,
-        required: true,
-      },
-      inStock: {
-        type: Boolean,
-        default: true,
-        required: true,
-      },
-    },
-  ],
+  variants: [variantSchema],
   category: {
     type: String,
   },
-  description: {
-    type: String,
-    minLength: 20,
-  },
   publishers: {
-    type: mongoose.SchemaTypes.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Publisher',
   },
 });
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -55,10 +55,7 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: () => Date.now(),
   },
-  details: {
-    detailSchema,
-  },
-  stores: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Store' }],
+  details: detailSchema,
 });
 
 export default mongoose.model('Product', productSchema);

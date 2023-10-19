@@ -1,8 +1,9 @@
 import productModel from '../models/product.model.js';
+
 // Get all products
+
 export const getAllProducts = async (req, res) => {
   const { products, page } = req.query;
-  console.log(products, page);
   try {
     const totalProducts = await productModel.countDocuments();
     const total = Math.ceil(totalProducts / products);
@@ -93,12 +94,30 @@ export const filteredByField = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   const product = req.body;
+  if (!product.details || !product.details.variants)
+    return res.status(400).json({ message: 'Variants not null!' });
   try {
-    if (!product.details.variants)
-      return res.status(400).json({ message: 'Variants not null!' });
-    const newProduct = new productModel(product);
-    const savedProduct = await newProduct.save();
-    return res.status(200).json({ product: savedProduct });
+    const existingProduct = await productModel.findOne({ name: product.name });
+    if (existingProduct) {
+      const { variants } = product.details;
+      for (const variant of variants) {
+        const existingVariant = existingProduct.details.variants.find(
+          (v) => v.size === variant.size && v.color === variant.color
+        );
+        console.log(existingVariant?.color, existingVariant?.size);
+        if (existingVariant?.size && existingVariant?.color) {
+          existingVariant.quantity += variant.quantity;
+        } else {
+          existingProduct.details.variants.push(variant);
+        }
+      }
+      const updatedProduct = await existingProduct.save();
+      return res.status(200).json({ product: updatedProduct });
+    } else {
+      const newProduct = new productModel(product);
+      const savedProduct = await newProduct.save();
+      return res.status(200).json({ product: savedProduct });
+    }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
