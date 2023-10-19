@@ -5,21 +5,28 @@ const detailSchema = new mongoose.Schema({
       size: {
         type: String,
         lowercase: true,
+        required: true,
       },
       color: {
         type: String,
         lowercase: true,
+        required: true,
       },
       quantity: {
         type: Number,
         default: 0,
+        required: true,
       },
       inStock: {
         type: Boolean,
         default: true,
+        required: true,
       },
     },
   ],
+  category: {
+    type: String,
+  },
   description: {
     type: String,
     minLength: 20,
@@ -33,6 +40,7 @@ const productSchema = new mongoose.Schema({
   name: {
     type: String,
     lowercase: true,
+    required: true,
   },
   price: {
     type: Number,
@@ -47,7 +55,9 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: () => Date.now(),
   },
-  details: [detailSchema],
+  details: {
+    detailSchema,
+  },
   stores: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Store' }],
 });
 

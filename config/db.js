@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { mongoose } from '../utils/importFile.js';
 export const connectDb = async () => {
   try {
     const username = process.env.DATABASE_USERNAME;
