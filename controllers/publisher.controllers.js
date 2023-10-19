@@ -44,3 +44,43 @@ export const createPublisher = async (req, res) => {
 };
 
 // Update Publisher
+
+export const updatePublisher = async (req, res) => {
+  const { id } = req.params;
+  const publisher = req.body;
+  try {
+    const existingPublisher = await publisherModel.findById(id);
+    if (existingPublisher) {
+      return res
+        .status(404)
+        .json({ message: `Not found publisher by id: ${id}` });
+    } else {
+      const updatedPublisher = await publisherModel.findByIdAndUpdate({
+        _id: id,
+        publisher,
+      });
+      return res.status(200).json(updatedPublisher);
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete Publisher
+
+export const deletePublisher = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const existingPublisher = await publisherModel.findById(id);
+    if (existingPublisher) {
+      return res
+        .status(404)
+        .json({ message: `Not found publisher by id: ${id}` });
+    } else {
+      const deletedPublisher = await publisherModel.findByIdAndDelete(id);
+      return res.status(200).json(deletedPublisher);
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};

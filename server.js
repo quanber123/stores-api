@@ -5,6 +5,7 @@ import cors from 'cors';
 import corsOptions from './config/cors.js';
 import routerProduct from './router/product.router.js';
 import routerStore from './router/store.router.js';
+import routerPublisher from './router/publisher.router.js';
 config();
 connectDb();
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(routerProduct);
 app.use(routerStore);
+app.use(routerPublisher);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
