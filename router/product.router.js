@@ -2,13 +2,14 @@ import { Router, json } from 'express';
 import {
   getAllProducts,
   searchProducts,
-  filteredByField,
   createProduct,
   updateProduct,
   deleteProduct,
+  getProductById,
 } from '../controllers/product.controllers.js';
 import { auth } from '../middleware/auth.js';
 import { config } from '../utils/importFile.js';
+import { uploadImg } from '../middleware/upload.js';
 config();
 const routerProduct = Router();
 const end_point = process.env.END_POINT_PRODUCT;
@@ -17,8 +18,8 @@ routerProduct
   .route(end_point)
   .get(getAllProducts)
   .get(searchProducts)
-  .get(filteredByField)
-  .post(createProduct)
+  .post(uploadImg, createProduct)
   .put(updateProduct)
   .delete(deleteProduct);
+routerProduct.route(`${end_point}/:id`).get(getProductById);
 export default routerProduct;

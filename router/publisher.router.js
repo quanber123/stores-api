@@ -6,7 +6,7 @@ import {
   deletePublisher,
   getAllPublishers,
   updatePublisher,
-} from '../controllers/publisher.controllers';
+} from '../controllers/publisher.controllers.js';
 config();
 const routerPublisher = Router();
 const end_point = process.env.END_POINT_PUBLISHER;

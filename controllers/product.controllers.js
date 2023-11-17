@@ -3,14 +3,17 @@ import productModel from '../models/product.model.js';
 // Get all products
 
 export const getAllProducts = async (req, res) => {
-  const { products, page } = req.query;
+  const { field, value, page } = req.query;
+  const query = {};
+  if (field && value) query[field] = value;
   try {
     const totalProducts = await productModel.countDocuments();
-    const total = Math.ceil(totalProducts / products);
+    const total = Math.ceil(totalProducts / 8);
     const findAllProducts = await productModel
-      .find()
-      .skip((page - 1) * products)
-      .limit(products);
+      .find(query)
+      .populate(['details.category', 'details.tags'])
+      .skip((page - 1) * 8)
+      .limit(8);
     if (findAllProducts) {
       return res
         .status(200)
@@ -24,7 +27,36 @@ export const getAllProducts = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+// Get product by id
 
+export const getProductById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const existingProduct = await productModel
+      .findById(id)
+      .populate(['details.category', 'details.tags']);
+    const relatedProducts = await productModel
+      .find({
+        'details.tags': { $in: [...existingProduct.details.tags] },
+        'details.category': existingProduct.details.category,
+        _id: { $ne: existingProduct._id },
+      })
+      .sort({ created_at: -1 })
+      .limit(4)
+      .populate(['details.category', 'details.tags']);
+    await Promise.all([existingProduct, relatedProducts]).then(() => {
+      if (!existingProduct) {
+        return res.status(404).json({ message: `Not found by id ${id}` });
+      } else {
+        return res
+          .status(200)
+          .json({ product: existingProduct, relatedProducts: relatedProducts });
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 // Search products
 
 export const searchProducts = async (req, res) => {
@@ -63,57 +95,37 @@ export const searchProducts = async (req, res) => {
   }
 };
 
-// Filter by Field
-
-export const filteredByField = async (req, res) => {
-  const { field, value, products, page } = req.query;
-  const query = {};
-  if (field && value) query[field] = value;
-  try {
-    const totalPages = await productModel.countDocuments(query);
-    const total = Math.ceil(totalPages / products);
-    const findAllProducts = await productModel
-      .find(query)
-      .skip((page - 1) * products)
-      .limit(products);
-    if (findAllProducts) {
-      return res
-        .status(200)
-        .json({ products: findAllProducts, totalPages: total });
-    } else {
-      return res
-        .status(404)
-        .json({ message: 'Not found products in database' });
-    }
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
-
 // Create Product
 
 export const createProduct = async (req, res) => {
   const product = req.body;
-  if (!product.details || !product.details.variants)
-    return res.status(400).json({ message: 'Variants not null!' });
   try {
+    if (!product.details || !product.details.variants)
+      return res.status(400).json({ message: 'Variants not null!' });
     const existingProduct = await productModel.findOne({ name: product.name });
     if (existingProduct) {
       const { variants } = product.details;
-      for (const variant of variants) {
+      variants.forEach((variant) => {
         const existingVariant = existingProduct.details.variants.find(
-          (v) => v.size === variant.size && v.color === variant.color
+          (v) =>
+            v.size === variant.size?.toLowerCase() &&
+            v.color === variant.color?.toLowerCase()
         );
-        console.log(existingVariant?.color, existingVariant?.size);
-        if (existingVariant?.size && existingVariant?.color) {
+        if (existingVariant) {
+          existingVariant.inStock = variant.quantity > 0 ? true : false;
           existingVariant.quantity += variant.quantity;
         } else {
+          variant.inStock = variant.quantity > 0 ? true : false;
           existingProduct.details.variants.push(variant);
         }
-      }
+      });
       const updatedProduct = await existingProduct.save();
       return res.status(200).json({ product: updatedProduct });
     } else {
+      const { variants } = product.details;
+      variants.forEach((variant) => {
+        variant.inStock = variant.quantity > 0 ? true : false;
+      });
       const newProduct = new productModel(product);
       const savedProduct = await newProduct.save();
       return res.status(200).json({ product: savedProduct });

@@ -21,17 +21,28 @@ const variantSchema = new mongoose.Schema({
     default: true,
     required: true,
   },
-  description: String,
-  stores: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' },
 });
 
 const detailSchema = new mongoose.Schema({
   variants: [variantSchema],
   category: {
-    type: String,
+    type: mongoose.SchemaTypes.ObjectId,
+    ref: 'Category',
   },
+  tags: [
+    {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Tag',
+    },
+  ],
+  shortDescription: String,
+  description: String,
+  weight: String,
+  dimensions: String,
+  materials: String,
+  stores: { type: mongoose.SchemaTypes.ObjectId, ref: 'Store' },
   publishers: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.SchemaTypes.ObjectId,
     ref: 'Publisher',
   },
 });
@@ -42,9 +53,19 @@ const productSchema = new mongoose.Schema({
     lowercase: true,
     required: true,
   },
+  images: [
+    {
+      type: String,
+      required: true,
+    },
+  ],
   price: {
     type: Number,
     required: true,
+  },
+  type: {
+    type: String,
+    default: () => 'product',
   },
   created_at: {
     type: Date,
@@ -56,6 +77,13 @@ const productSchema = new mongoose.Schema({
     default: () => Date.now(),
   },
   details: detailSchema,
+  reviews: [
+    {
+      avatar: String,
+      content: String,
+      vote: Number,
+    },
+  ],
 });
 
 export default mongoose.model('Product', productSchema);
