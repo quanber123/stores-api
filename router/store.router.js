@@ -11,7 +11,6 @@ config();
 const routerStore = Router();
 routerStore.use(json());
 const end_point = process.env.END_POINT_STORE;
-
 routerStore
   .route(end_point)
   .get(getAllStores)

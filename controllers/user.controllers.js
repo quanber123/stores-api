@@ -7,6 +7,28 @@ const oAuth2Client = new OAuth2Client(
   process.env.CLIENT_SECRET,
   'postmessage'
 );
+
+//GET User by token
+
+export const getUserByToken = async (req, res) => {
+  const { username } = req.user;
+  try {
+    const existedUser = await userModel.findOne({ username: username });
+    if (!existedUser) {
+      return res.stats(404).json({ message: `Not found user ${username}` });
+    } else {
+      return res.status(200).json({
+        user: {
+          username: existedUser.username,
+          name: existedUser.name,
+          imageSrc: existedUser.image,
+        },
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 //User Login
 export const userLogin = async (req, res) => {
   const { username, password } = req.body;
@@ -33,7 +55,7 @@ export const userLogin = async (req, res) => {
       return res.status(200).json({ accessToken: token });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -58,7 +80,7 @@ export const userRegister = async (req, res) => {
     const savedUser = await newUser.save();
     res.status(200).json(savedUser);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 

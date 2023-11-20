@@ -1,13 +1,21 @@
 import productModel from '../models/product.model.js';
-
+import categoryModel from '../models/category.model.js';
 // Get all products
 
 export const getAllProducts = async (req, res) => {
-  const { field, value, page } = req.query;
-  const query = {};
-  if (field && value) query[field] = value;
+  const { category, page } = req.query;
+  let query = {};
   try {
-    const totalProducts = await productModel.countDocuments();
+    if (category) {
+      const foundCategory = await categoryModel.findOne({ name: category });
+      if (foundCategory) {
+        query = { 'details.category': foundCategory._id };
+      } else {
+        console.log('Category not found');
+      }
+    }
+    console.log(query);
+    const totalProducts = await productModel.countDocuments(query);
     const total = Math.ceil(totalProducts / 8);
     const findAllProducts = await productModel
       .find(query)
