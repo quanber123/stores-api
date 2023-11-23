@@ -14,7 +14,6 @@ export const getAllProducts = async (req, res) => {
         console.log('Category not found');
       }
     }
-    console.log(query);
     const totalProducts = await productModel.countDocuments(query);
     const total = Math.ceil(totalProducts / 8);
     const findAllProducts = await productModel
