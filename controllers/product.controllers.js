@@ -1,19 +1,36 @@
 import productModel from '../models/product.model.js';
 import categoryModel from '../models/category.model.js';
+import tagModel from '../models/tag.model.js';
 // Get all products
 
 export const getAllProducts = async (req, res) => {
-  const { category, page } = req.query;
+  const { category, tag, page } = req.query;
   let query = {};
   try {
-    if (category) {
-      const foundCategory = await categoryModel.findOne({ name: category });
-      if (foundCategory) {
-        query = { 'details.category': foundCategory._id };
+    if (category || tag) {
+      const foundCategory = category
+        ? await categoryModel.findOne({ name: category })
+        : '';
+      const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
+      if (foundCategory !== '' || foundTag !== '') {
+        query = {};
+        if (foundCategory !== '') {
+          query['details.category'] = foundCategory?._id;
+        }
+        if (foundTag !== '') {
+          query['details.tags'] = foundTag?._id;
+        }
+        if (foundCategory && foundTag) {
+          query = {
+            'details.category': foundCategory?._id,
+            'details.tags': foundTag?._id,
+          };
+        }
       } else {
-        console.log('Category not found');
+        console.log('Category or Tag not found');
       }
     }
+
     const totalProducts = await productModel.countDocuments(query);
     const total = Math.ceil(totalProducts / 8);
     const findAllProducts = await productModel
