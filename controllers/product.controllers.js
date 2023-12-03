@@ -4,8 +4,9 @@ import tagModel from '../models/tag.model.js';
 // Get all products
 
 export const getAllProducts = async (req, res) => {
-  const { category, tag, page } = req.query;
+  const { category, tag, arrange, page } = req.query;
   let query = {};
+  let sort = {};
   try {
     if (category || tag) {
       const foundCategory = category
@@ -30,11 +31,33 @@ export const getAllProducts = async (req, res) => {
         console.log('Category or Tag not found');
       }
     }
-
+    switch (arrange) {
+      case '-date':
+        sort = {
+          created_at: 1,
+        };
+        break;
+      case 'date':
+        sort = {
+          created_at: -1,
+        };
+        break;
+      case '-price':
+        sort = {
+          price: -1,
+        };
+        break;
+      case 'price':
+        sort = { price: 1 };
+        break;
+      default:
+        break;
+    }
     const totalProducts = await productModel.countDocuments(query);
     const total = Math.ceil(totalProducts / 8);
     const findAllProducts = await productModel
       .find(query)
+      .sort(sort)
       .populate(['details.category', 'details.tags'])
       .skip((page - 1) * 8)
       .limit(8);
