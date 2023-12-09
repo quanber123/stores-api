@@ -1,12 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { OAuth2Client } from 'google-auth-library';
 import userModel from '../models/user.model.js';
-const oAuth2Client = new OAuth2Client(
-  process.env.CLIENT_ID,
-  process.env.CLIENT_SECRET,
-  'postmessage'
-);
 
 //GET User by token
 
@@ -85,57 +79,3 @@ export const userRegister = async (req, res) => {
 };
 
 // Login by google
-
-export const googleLogin = async (req, res) => {
-  try {
-    const { tokens } = await oAuth2Client.getToken(req.body.code);
-    const ticket = await oAuth2Client.verifyIdToken({
-      idToken: tokens.id_token,
-      audience: process.env.CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const findUser = await userModel.findOne({ username: payload.email });
-    if (!findUser) {
-      const user = {
-        id: payload.sub,
-        username: payload.email,
-        name: payload.name,
-        image: payload.picture,
-        oauthProvider: 'Google',
-      };
-      const newUser = new userModel(user);
-      const saveUser = await newUser.save();
-      const token = jwt.sign(
-        { username: saveUser.username },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: `90d` }
-      );
-      return res.json({
-        accessToken: token,
-        admin: {
-          username: saveUser.username,
-          name: saveUser.name,
-          imageSrc: saveUser.image,
-        },
-      });
-    } else {
-      const token = jwt.sign(
-        {
-          username: findUser.username,
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: `90d` }
-      );
-      return res.json({
-        accessToken: token,
-        user: {
-          username: findUser.username,
-          name: findUser.name,
-          imageSrc: findUser.image,
-        },
-      });
-    }
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};

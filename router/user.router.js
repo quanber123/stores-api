@@ -1,11 +1,7 @@
-import {
-  getUserByToken,
-  googleLogin,
-} from '../controllers/user.controllers.js';
+import { getUserByToken } from '../controllers/user.controllers.js';
 import { auth } from '../middleware/auth.js';
 import { Router, json } from 'express';
-const router = Router();
-router.use(json());
-router.route('/api/auth/get-user').get(auth, getUserByToken);
-router.route('/api/auth/login-google').post(googleLogin);
-export const routerUser = router;
+const routerUser = Router();
+routerUser.use(json());
+routerUser.route('/api/auth/get-user').get(auth, getUserByToken);
+export default routerUser;

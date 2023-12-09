@@ -8,6 +8,8 @@ const corsOptions = {
     }
   },
   optionsSuccessStatus: 200,
+  methods: 'GET,POST,PUT,DELETE',
+  credentials: true,
 };
 
 export default corsOptions;
