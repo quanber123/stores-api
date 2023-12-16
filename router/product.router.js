@@ -6,7 +6,6 @@ import {
   updateProduct,
   deleteProduct,
   getProductById,
-  getProductOverview,
 } from '../controllers/product.controllers.js';
 import { auth } from '../middleware/auth.js';
 import { config } from '../utils/importFile.js';
@@ -22,6 +21,5 @@ routerProduct
   .post(uploadImg, createProduct)
   .put(updateProduct)
   .delete(deleteProduct);
-routerProduct.route(`${end_point}-overview`).get(getProductOverview);
 routerProduct.route(`${end_point}/:id`).get(getProductById);
 export default routerProduct;

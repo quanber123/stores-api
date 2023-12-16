@@ -7,10 +7,10 @@ export const auth = (req, res, next) => {
   }
   jwt.verify(getToken, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403);
+      return res.status(403).json({ message: 'Token is not incorrect!' });
     }
     if (decoded) {
-      req.user = decoded;
+      req.decoded = decoded;
       next();
     }
   });

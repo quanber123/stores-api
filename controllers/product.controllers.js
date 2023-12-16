@@ -73,25 +73,6 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
-//Get product overview
-
-export const getProductOverview = async (req, res) => {
-  try {
-    const products = await productModel
-      .find()
-      .sort({ created_at: -1 })
-      .limit(8)
-      .populate(['details.category', 'details.tags']);
-    if (products) {
-      return res.status(200).json({ products: products });
-    } else {
-      return res.status(404).json({ message: 'Not found products!' });
-    }
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
-
 // Get product by id
 
 export const getProductById = async (req, res) => {

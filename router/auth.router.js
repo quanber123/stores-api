@@ -24,6 +24,11 @@ routerAuth.get(`${end_point}/login/success`, (req, res) => {
   }
 });
 routerAuth.get(`${end_point}/logout`, (req, res) => {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+  });
   res.redirect(client_url);
 });
 routerAuth.get(
