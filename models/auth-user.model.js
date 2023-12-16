@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-const defaultImg = 'avatar-trang.jpg';
 const authUserSchema = new mongoose.Schema({
   created_at: {
     type: Date,
@@ -16,7 +15,7 @@ const authUserSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    default: `localhost:3000/public/${defaultImg}`,
+    default: 'http://localhost:3000/public/avatar-trang.jpg',
   },
   isVerified: {
     type: Boolean,

@@ -9,19 +9,20 @@ import { sendVerificationEmail } from '../utils/sendVerificationEmail.js';
 //GET User by token
 export const getUserByToken = async (req, res) => {
   const { email } = req.decoded;
+  const existedOauthUser = await oauthUserModel.findOne({ email: email });
+  const existedAuthUser = await authUserModel.findOne({ email: email });
   try {
-    const existedOauthUser = await oauthUserModel.findOne({ email: email });
-    const existedAuthUser = await authUserModel.findOne({ email: email });
-    Promise.all([existedAuthUser, existedOauthUser]);
-    console.log(existedAuthUser, existedOauthUser);
+    const [oauthUserResult, authUserResult] = await Promise.all([
+      existedOauthUser,
+      existedAuthUser,
+    ]);
     if (existedOauthUser || existedAuthUser) {
       return res.status(200).json({
         user: {
-          email: existedAuthUser?.email || existedOauthUser?.email,
-          name: existedAuthUser?.name || existedOauthUser?.name,
-          image: existedAuthUser?.image || existedOauthUser?.image,
-          isVerified:
-            existedAuthUser?.isVerified || existedOauthUser?.isVerified,
+          email: oauthUserResult?.email || authUserResult?.email,
+          name: oauthUserResult?.name || authUserResult?.name,
+          image: oauthUserResult?.image || authUserResult?.image,
+          isVerified: oauthUserResult?.isVerified || authUserResult?.isVerified,
         },
       });
     } else {
@@ -37,11 +38,12 @@ export const userLogin = async (req, res) => {
   if (!email || !password) {
     return res
       .status(400)
-      .json({ messages: 'Username and Password are required!' });
+      .json({ message: 'Username and Password are required!' });
   }
   try {
     const findUser = await authUserModel.findOne({ email: email });
-    if (!findUser) return res.sendStatus(401);
+    if (!findUser)
+      return res.status(401).json({ message: 'Account is unauthorized' });
     const match = await bcrypt.compare(password, findUser.password);
     if (match) {
       const token = jwt.sign(
@@ -72,15 +74,18 @@ export const userLogin = async (req, res) => {
 // User Register Auth
 export const userRegister = async (req, res) => {
   const { name, email, password } = req.body;
+  const duplicatedOauthUser = await authUserModel.findOne({
+    email: email,
+  });
+  const duplicatedAuthUser = await oauthUserModel.findOne({
+    email: email,
+  });
   try {
-    const duplicatedAuthUser = await oauthUserModel.findOne({
-      email: email,
-    });
-    const duplicatedOauthUser = await authUserModel.findOne({
-      email: email,
-    });
-    Promise.all([duplicatedAuthUser, duplicatedOauthUser]);
-    if (duplicatedAuthUser || duplicatedOauthUser)
+    const [oauthUserResult, authUserResult] = await Promise.all([
+      duplicatedOauthUser,
+      duplicatedAuthUser,
+    ]);
+    if (oauthUserResult || authUserResult)
       return res.status(409).json({ message: 'Email already existed!' });
     const hashedPassword = await hashPassword(password);
     const verificationCode = generateVerificationCode();
@@ -126,8 +131,8 @@ export const verifiedAccount = async (req, res) => {
       await user.save();
       const token = jwt.sign(
         {
+          name: user.name,
           email: user.email,
-          password: user.password,
           image: user.image,
           isVerified: user.isVerified,
         },
@@ -135,8 +140,8 @@ export const verifiedAccount = async (req, res) => {
         { expiresIn: `90d` }
       );
       const responseUser = {
+        name: user.name,
         email: user.email,
-        password: user.password,
         image: user.image,
         isVerified: user.isVerified,
       };
@@ -154,15 +159,13 @@ export const verifiedAccount = async (req, res) => {
 };
 export const sendCodeVerifiedAccount = async (req, res) => {
   const { email } = req.body;
+  console.log(req.body);
   try {
-    const duplicatedAuthUser = await oauthUserModel.findOne({
-      username: email,
-    });
-    const duplicatedOauthUser = await authUserModel.findOne({
+    const existedAuthEmail = await authUserModel.findOne({
       email: email,
     });
-    if (duplicatedAuthUser || duplicatedOauthUser)
-      return res.status(409).json({ message: 'Email already existed!' });
+    if (!existedAuthEmail)
+      return res.status(409).json({ message: 'Email is not existed!' });
     const verificationCode = generateVerificationCode();
     await authUserModel.findOneAndUpdate({
       email: email,

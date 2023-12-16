@@ -88,7 +88,7 @@ export const getProductById = async (req, res) => {
         _id: { $ne: existingProduct._id },
       })
       .sort({ created_at: -1 })
-      .limit(4)
+      .limit(8)
       .populate(['details.category', 'details.tags']);
     await Promise.all([existingProduct, relatedProducts]).then(() => {
       if (!existingProduct) {
