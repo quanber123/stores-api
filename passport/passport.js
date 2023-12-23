@@ -48,7 +48,6 @@ passport.use(
     },
     async function (accessToken, refreshToken, profile, done) {
       const { id, displayName, emails, photos, provider } = profile;
-      console.log(profile);
       try {
         const existedUser = await userModel.findOne({ email: emails[0].value });
         if (!existedUser) {

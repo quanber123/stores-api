@@ -1,13 +1,64 @@
 import mongoose from 'mongoose';
 
-const commentSchema = new mongoose.Schema({
-  avatar: String,
-  cmt: String,
-  dateCmt: {
+const blogSchema = new mongoose.Schema({
+  author: {
+    type: String,
+    lowercase: true,
+  },
+  imgSrc: String,
+  title: String,
+  created_at: {
     type: Date,
-    immutable: true,
     default: () => Date.now(),
   },
-});
+  updated_at: {
+    type: Date,
+    default: () => Date.now(),
+  },
+  open_paragraph: String,
+  body_paragraph: String,
+  close_paragraph: String,
+  quotes: String,
+  category: [
+    {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Category',
+    },
+  ],
+  tags: [
+    {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Tag',
+    },
+  ],
+  views: {
+    type: Number,
+    default: 0,
+  },
+  comments: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+      },
+      // onUserType: {
+      //   type: String,
+      //   enum: ['AuthUser', 'OauthUser'],
+      // },
+      text: String,
+      created_at: {
+        type: Date,
+        default: () => Date.now(),
+      },
+    },
+  ],
 
-export default mongoose.model('CommentUser', commentSchema);
+  totalComments: {
+    type: Number,
+    default: 0,
+  },
+});
+blogSchema.pre('save', function (next) {
+  this.totalComments = this.comments.length;
+  next();
+});
+export default mongoose.model('Blog', blogSchema);

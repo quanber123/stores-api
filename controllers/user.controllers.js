@@ -8,9 +8,9 @@ import { sendVerificationEmail } from '../utils/sendVerificationEmail.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
-  const { email } = req.decoded;
-  const existedOauthUser = await oauthUserModel.findOne({ email: email });
-  const existedAuthUser = await authUserModel.findOne({ email: email });
+  const { user } = req.decoded;
+  const existedOauthUser = await oauthUserModel.findOne({ email: user.email });
+  const existedAuthUser = await authUserModel.findOne({ email: user.email });
   try {
     const [oauthUserResult, authUserResult] = await Promise.all([
       existedOauthUser,
@@ -19,6 +19,7 @@ export const getUserByToken = async (req, res) => {
     if (existedOauthUser || existedAuthUser) {
       return res.status(200).json({
         user: {
+          _id: oauthUserResult?._id || authUserResult?._id,
           email: oauthUserResult?.email || authUserResult?.email,
           name: oauthUserResult?.name || authUserResult?.name,
           image: oauthUserResult?.image || authUserResult?.image,
@@ -43,11 +44,13 @@ export const userLogin = async (req, res) => {
   try {
     const findUser = await authUserModel.findOne({ email: email });
     if (!findUser)
-      return res.status(401).json({ message: 'Account is unauthorized' });
+      return res.status(404).json({ message: 'Account not register!' });
     const match = await bcrypt.compare(password, findUser.password);
     if (match) {
       const token = jwt.sign(
         {
+          _id: findUser._id,
+          name: findUser.name,
           email: findUser.email,
           password: findUser.password,
           image: findUser.image,
@@ -59,12 +62,16 @@ export const userLogin = async (req, res) => {
       return res.status(200).json({
         accessToken: token,
         user: {
+          _id: findUser._id,
+          name: findUser.name,
           email: findUser.email,
           password: findUser.password,
           image: findUser.image,
           isVerified: findUser.isVerified,
         },
       });
+    } else {
+      return res.status(403).json({ message: 'Password is not incorrect!' });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -74,18 +81,14 @@ export const userLogin = async (req, res) => {
 // User Register Auth
 export const userRegister = async (req, res) => {
   const { name, email, password } = req.body;
-  const duplicatedOauthUser = await authUserModel.findOne({
-    email: email,
-  });
-  const duplicatedAuthUser = await oauthUserModel.findOne({
-    email: email,
-  });
   try {
-    const [oauthUserResult, authUserResult] = await Promise.all([
-      duplicatedOauthUser,
-      duplicatedAuthUser,
-    ]);
-    if (oauthUserResult || authUserResult)
+    const duplicatedOauthUser = await authUserModel.findOne({
+      email: email,
+    });
+    const duplicatedAuthUser = await oauthUserModel.findOne({
+      email: email,
+    });
+    if (duplicatedOauthUser || duplicatedAuthUser)
       return res.status(409).json({ message: 'Email already existed!' });
     const hashedPassword = await hashPassword(password);
     const verificationCode = generateVerificationCode();
@@ -108,6 +111,7 @@ export const userRegister = async (req, res) => {
     return res.status(201).json({
       message: 'Please check your email to verified account!',
       user: {
+        _id: user._id,
         name: user.name,
         email: user.email,
         image: user.image,
@@ -131,6 +135,7 @@ export const verifiedAccount = async (req, res) => {
       await user.save();
       const token = jwt.sign(
         {
+          _id: user._id,
           name: user.name,
           email: user.email,
           image: user.image,
@@ -140,6 +145,7 @@ export const verifiedAccount = async (req, res) => {
         { expiresIn: `90d` }
       );
       const responseUser = {
+        _id: user._id,
         name: user.name,
         email: user.email,
         image: user.image,
@@ -151,7 +157,7 @@ export const verifiedAccount = async (req, res) => {
         accessToken: token,
       });
     } else {
-      res.status(400).json({ error: 'Invalid verification code.' });
+      res.status(400).json({ message: 'Invalid verification code.' });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -159,7 +165,6 @@ export const verifiedAccount = async (req, res) => {
 };
 export const sendCodeVerifiedAccount = async (req, res) => {
   const { email } = req.body;
-  console.log(req.body);
   try {
     const existedAuthEmail = await authUserModel.findOne({
       email: email,

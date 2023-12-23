@@ -15,13 +15,14 @@ routerAuth.get(`${end_point}/login/success`, (req, res) => {
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: `90d` }
     );
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'successful',
       user: req.user,
       accessToken: token,
     });
   }
+  return res.status(404).json({ message: 'Not Found!' });
 });
 routerAuth.get(`${end_point}/logout`, (req, res) => {
   req.logout(function (err) {
@@ -43,6 +44,7 @@ routerAuth.get(
     successRedirect: client_url,
     failureRedirect: '/login/failed',
     session: true,
+    expiresIn: '60m',
   })
 );
 routerAuth.get(
@@ -55,6 +57,7 @@ routerAuth.get(
     successRedirect: client_url,
     failureRedirect: '/login/failed',
     session: true,
+    expiresIn: '60m',
   })
 );
 
