@@ -3,7 +3,7 @@ import bannerModel from '../models/banner.model.js';
 
 export const getAllBanners = async (req, res) => {
   try {
-    const findAllBanners = await bannerModel.find();
+    const findAllBanners = await bannerModel.find().lean();
     if (findAllBanners) {
       return res.status(200).json(findAllBanners);
     }
@@ -23,9 +23,11 @@ export const createBanner = async (req, res) => {
         .status(411)
         .json({ message: 'Can not add more than 3 recordings!' });
     }
-    const existingBanner = await bannerModel.findOne({
-      content: banner.content,
-    });
+    const existingBanner = await bannerModel
+      .findOne({
+        content: banner.content,
+      })
+      .lean();
     if (existingBanner) {
       return res.status(409).json({
         message: `Banner content ${banner.content} already existed!`,

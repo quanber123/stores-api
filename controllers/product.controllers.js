@@ -58,7 +58,8 @@ export const getAllProducts = async (req, res) => {
       .sort(sort)
       .populate(['details.category', 'details.tags'])
       .skip((page - 1) * 8)
-      .limit(8);
+      .limit(8)
+      .lean();
     if (findAllProducts) {
       return res
         .status(200)
@@ -88,8 +89,9 @@ export const getProductById = async (req, res) => {
         _id: { $ne: existingProduct._id },
       })
       .sort({ created_at: -1 })
-      .limit(8)
-      .populate(['details.category', 'details.tags']);
+      .populate(['details.category', 'details.tags'])
+      .lean()
+      .limit(8);
     await Promise.all([existingProduct, relatedProducts]).then(() => {
       if (!existingProduct) {
         return res.status(404).json({ message: `Not found by id ${id}` });
@@ -123,7 +125,8 @@ export const searchProducts = async (req, res) => {
         name: { $regex: searchRegex },
       })
       .skip((page - 1) * products)
-      .limit(products);
+      .limit(products)
+      .lean();
 
     if (!searchProducts) {
       return res
@@ -148,7 +151,9 @@ export const createProduct = async (req, res) => {
   try {
     if (!product.details || !product.details.variants)
       return res.status(400).json({ message: 'Variants not null!' });
-    const existingProduct = await productModel.findOne({ name: product.name });
+    const existingProduct = await productModel
+      .findOne({ name: product.name })
+      .lean();
     if (existingProduct) {
       const { variants } = product.details;
       variants.forEach((variant) => {
@@ -165,7 +170,7 @@ export const createProduct = async (req, res) => {
           existingProduct.details.variants.push(variant);
         }
       });
-      const updatedProduct = await existingProduct.save();
+      const updatedProduct = await existingProduct.save().lean();
       return res.status(200).json({ product: updatedProduct });
     } else {
       const { variants } = product.details;
@@ -173,7 +178,7 @@ export const createProduct = async (req, res) => {
         variant.inStock = variant.quantity > 0 ? true : false;
       });
       const newProduct = new productModel(product);
-      const savedProduct = await newProduct.save();
+      const savedProduct = await newProduct.save().lean();
       return res.status(200).json({ product: savedProduct });
     }
   } catch (error) {

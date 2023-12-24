@@ -37,7 +37,7 @@ export const getAllBlogs = async (req, res) => {
       .sort({ created_at: -1 })
       .skip((page - 1) * 8)
       .limit(8)
-      .exec();
+      .lean();
     if (findAllBlogs) {
       return res.status(200).json({ blogs: findAllBlogs, totalPage: total });
     } else {

@@ -10,7 +10,8 @@ export const getAllStores = async (req, res) => {
     const findAllStores = await storeModel
       .find()
       .skip((page - 1) * stores)
-      .limit(stores);
+      .limit(stores)
+      .lean();
     if (findAllStores) {
       return res.status(200).json({ stores: findAllStores, totalPage: total });
     } else {

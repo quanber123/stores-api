@@ -3,7 +3,7 @@ import categoryModel from '../models/category.model.js';
 
 export const getAllCategories = async (req, res) => {
   try {
-    const findAllCategories = await categoryModel.find();
+    const findAllCategories = await categoryModel.find().lean();
     if (findAllCategories) {
       return res.status(200).json(findAllCategories);
     }
@@ -17,12 +17,14 @@ export const getAllCategories = async (req, res) => {
 export const createCategory = async (req, res) => {
   const category = req.body;
   try {
-    const existingCategory = await categoryModel.findOne({
-      name: category.name,
-    });
+    const existingCategory = await categoryModel
+      .findOne({
+        name: category.name,
+      })
+      .lean();
     if (existingCategory) {
       return res.status(409).json({
-        message: `Category name ${Category.name} already existed!`,
+        message: `Category name ${category.name} already existed!`,
       });
     } else {
       const newCategory = new categoryModel(category);
@@ -40,16 +42,18 @@ export const updateCategory = async (req, res) => {
   const { id } = req.params;
   const category = req.body;
   try {
-    const existingCategory = await categoryModel.findById(id);
+    const existingCategory = await categoryModel.findById(id).lean();
     if (existingCategory) {
       return res
         .status(404)
         .json({ message: `Not found Category by id: ${id}` });
     } else {
-      const updatedCategory = await categoryModel.findByIdAndUpdate({
-        _id: id,
-        category,
-      });
+      const updatedCategory = await categoryModel
+        .findByIdAndUpdate({
+          _id: id,
+          category,
+        })
+        .lean();
       return res.status(200).json(updatedCategory);
     }
   } catch (error) {
@@ -62,13 +66,13 @@ export const updateCategory = async (req, res) => {
 export const deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
-    const existingCategory = await categoryModel.findById(id);
+    const existingCategory = await categoryModel.findById(id).lean();
     if (existingCategory) {
       return res
         .status(404)
         .json({ message: `Not found Category by id: ${id}` });
     } else {
-      const deletedCategory = await categoryModel.findByIdAndDelete(id);
+      const deletedCategory = await categoryModel.findByIdAndDelete(id).lean();
       return res.status(200).json(deletedCategory);
     }
   } catch (error) {

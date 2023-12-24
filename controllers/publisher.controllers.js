@@ -10,7 +10,8 @@ export const getAllPublishers = async (req, res) => {
     const findAllPublishers = await publisherModel
       .find()
       .skip((page - 1) * publishers)
-      .limit(publishers);
+      .limit(publishers)
+      .lean();
     if (findAllPublishers) {
       return res
         .status(200)
@@ -26,9 +27,11 @@ export const getAllPublishers = async (req, res) => {
 export const createPublisher = async (req, res) => {
   const publisher = req.body;
   try {
-    const existingPublisher = await publisherModel.findOne({
-      name: publisher.name,
-    });
+    const existingPublisher = await publisherModel
+      .findOne({
+        name: publisher.name,
+      })
+      .lean();
     if (existingPublisher) {
       return res
         .status(409)

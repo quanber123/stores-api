@@ -8,9 +8,13 @@ import { sendVerificationEmail } from '../utils/sendVerificationEmail.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
-  const { user } = req.decoded;
-  const existedOauthUser = await oauthUserModel.findOne({ email: user.email });
-  const existedAuthUser = await authUserModel.findOne({ email: user.email });
+  const { email } = req.decoded;
+  const existedOauthUser = email
+    ? await oauthUserModel.findOne({ email: email }).lean()
+    : null;
+  const existedAuthUser = email
+    ? await authUserModel.findOne({ email: email }).lean()
+    : null;
   try {
     const [oauthUserResult, authUserResult] = await Promise.all([
       existedOauthUser,
@@ -42,7 +46,7 @@ export const userLogin = async (req, res) => {
       .json({ message: 'Username and Password are required!' });
   }
   try {
-    const findUser = await authUserModel.findOne({ email: email });
+    const findUser = await authUserModel.findOne({ email: email }).lean();
     if (!findUser)
       return res.status(404).json({ message: 'Account not register!' });
     const match = await bcrypt.compare(password, findUser.password);
