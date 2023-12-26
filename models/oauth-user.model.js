@@ -1,9 +1,5 @@
 import mongoose from 'mongoose';
 const oauthUserSchema = new mongoose.Schema({
-  id: {
-    type: String,
-    unique: true,
-  },
   created_at: {
     type: Date,
     default: () => Date.now(),

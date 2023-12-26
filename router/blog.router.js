@@ -1,7 +1,7 @@
 import { Router, json } from 'express';
 import { auth } from '../middleware/auth.js';
 import { config } from '../utils/importFile.js';
-import { uploadImg } from '../middleware/upload.js';
+import { uploadImg } from '../middleware/uploadImg.js';
 import {
   createBlog,
   getAllBlogs,

@@ -18,6 +18,7 @@ import routerUser from './router/user.router.js';
 import routerAuth from './router/auth.router.js';
 import routerBanner from './router/banner.router.js';
 import routerBlog from './router/blog.router.js';
+import routerNotify from './router/notify.router.js';
 config();
 connectDb();
 const app = express();
@@ -65,6 +66,7 @@ app.use(routerStore);
 app.use(routerPublisher);
 app.use(routerTag);
 app.use(routerCategory);
+app.use(routerNotify);
 app.use(routerUser);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
