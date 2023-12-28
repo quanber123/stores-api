@@ -5,8 +5,6 @@ import passport from 'passport';
 import session from 'express-session';
 import uid from 'uid-safe';
 import './passport/passport.js';
-// import swaggerJSDoc from 'swagger-jsdoc';
-// import swaggerUiExpress from 'swagger-ui-express';
 import cors from 'cors';
 import corsOptions from './config/cors.js';
 import routerProduct from './router/product.router.js';
@@ -43,21 +41,6 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-// const swaggerOptions = {
-//   swaggerDefinition: {
-//     info: {
-//       title: 'REST API with Cars (CRUD)',
-//       description: 'A REST API built with Express and MongoDB. This API',
-//     },
-//   },
-//   apis: ['./docs/swagger.js'],
-// };
-// const swaggerDocs = swaggerJSDoc(swaggerOptions);
-// app.use(
-//   '/api-docs',
-//   swaggerUiExpress.serve,
-//   swaggerUiExpress.setup(swaggerDocs)
-// );
 app.use(routerAuth);
 app.use(routerProduct);
 app.use(routerBlog);

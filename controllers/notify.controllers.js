@@ -1,4 +1,5 @@
 import notifyModel from '../models/notify.model.js';
+import settingsModel from '../models/settings.model.js';
 
 export const getAllNotifications = async (req, res) => {
   try {
@@ -22,10 +23,27 @@ export const createNotify = async (req, res) => {
       return res
         .status(409)
         .json({ message: `Notify name ${description} existed!` });
-    await notifyModel.create({
+    const newNotify = await notifyModel.create({
       type: type,
       description: description,
     });
+    const updatedSettings = await settingsModel.updateMany(
+      { user: { $exists: true } },
+      {
+        $push: {
+          notifications: {
+            type: type,
+            description: description,
+            enabled: true,
+            created_at: Date.now(),
+          },
+        },
+      }
+    );
+    await Promise.all([newNotify, updatedSettings]);
+    if (!newNotify || updatedSettings.matchedCount === 0) {
+      return res.status(401).json({ message: 'Failed to create!' });
+    }
     return res.status(200).json({ message: 'Created Successfully!' });
   } catch (error) {
     return res.status(500).json({ message: error.message });

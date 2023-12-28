@@ -1,6 +1,5 @@
 import { Router, json } from 'express';
 import { auth } from '../middleware/auth.js';
-import { config } from '../utils/importFile.js';
 import { uploadImg } from '../middleware/uploadImg.js';
 import {
   createBlog,
@@ -8,11 +7,9 @@ import {
   getBlogById,
   postComment,
 } from '../controllers/blog.controllers.js';
-config();
 const routerBlog = Router();
-const end_point = process.env.END_POINT_BLOG;
 routerBlog.use(json());
-routerBlog.route(end_point).get(getAllBlogs).post(createBlog);
-routerBlog.route(`${end_point}/:id`).get(getBlogById);
-routerBlog.route(`${end_point}/:id/comments`).post(postComment);
+routerBlog.route('/api/blogs').get(getAllBlogs).post(createBlog);
+routerBlog.route(`/api/blogs/:id`).get(getBlogById);
+routerBlog.route(`/api/:id/comments`).post(postComment);
 export default routerBlog;

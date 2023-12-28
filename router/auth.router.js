@@ -2,13 +2,12 @@ import { Router, json } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 const routerAuth = Router();
-const end_point = process.env.END_POINT_AUTH;
 const client_url = process.env.CLIENT_URL;
 routerAuth.use(json());
-routerAuth.get(`${end_point}/login/failed`, (req, res) => {
+routerAuth.get(`/api/auth/login/failed`, (req, res) => {
   res.status(401).json({ success: false, message: 'failure' });
 });
-routerAuth.get(`${end_point}/login/success`, (req, res) => {
+routerAuth.get(`/api/auth/login/success`, (req, res) => {
   if (req.user) {
     const token = jwt.sign(
       { user: req.user },
@@ -24,7 +23,7 @@ routerAuth.get(`${end_point}/login/success`, (req, res) => {
   }
   return res.status(404).json({ message: 'Not Found!' });
 });
-routerAuth.get(`${end_point}/logout`, (req, res) => {
+routerAuth.get(`/api/auth/logout`, (req, res) => {
   req.logout(function (err) {
     if (err) {
       return next(err);
@@ -33,13 +32,13 @@ routerAuth.get(`${end_point}/logout`, (req, res) => {
   res.redirect(client_url);
 });
 routerAuth.get(
-  `${end_point}/google`,
+  `/api/auth/google`,
   passport.authenticate('google', {
     scope: ['profile', 'email'],
   })
 );
 routerAuth.get(
-  `${end_point}/google/callback`,
+  `/api/auth/google/callback`,
   passport.authenticate('google', {
     successRedirect: client_url,
     failureRedirect: '/login/failed',
@@ -48,11 +47,11 @@ routerAuth.get(
   })
 );
 routerAuth.get(
-  `${end_point}/facebook`,
+  `/api/auth/facebook`,
   passport.authenticate('facebook', { scope: ['profile', 'email'] })
 );
 routerAuth.get(
-  `${end_point}/facebook/callback`,
+  `/api/auth/facebook/callback`,
   passport.authenticate('facebook', {
     successRedirect: client_url,
     failureRedirect: '/login/failed',

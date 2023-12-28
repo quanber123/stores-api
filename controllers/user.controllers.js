@@ -12,12 +12,12 @@ import settingsModel from '../models/settings.model.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
-  const { user } = req.decoded;
-  const existedOauthUser = user
-    ? await oauthUserModel.findOne({ email: user.email }).lean()
+  const { email } = req.decoded;
+  const existedOauthUser = email
+    ? await oauthUserModel.findOne({ email: email }).lean()
     : null;
-  const existedAuthUser = user
-    ? await authUserModel.findOne({ email: user.email }).lean()
+  const existedAuthUser = email
+    ? await authUserModel.findOne({ email: email }).lean()
     : null;
   try {
     const [oauthUserResult, authUserResult] = await Promise.all([
@@ -55,28 +55,20 @@ export const userLogin = async (req, res) => {
       return res.status(404).json({ message: 'Account not register!' });
     const match = await bcrypt.compare(password, findUser.password);
     if (match) {
-      const token = jwt.sign(
-        {
-          _id: findUser._id,
-          name: findUser.name,
-          email: findUser.email,
-          password: findUser.password,
-          image: findUser.image,
-          isVerified: findUser.isVerified,
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: `90d` }
-      );
+      const user = {
+        _id: findUser._id,
+        name: findUser.name,
+        email: findUser.email,
+        password: findUser.password,
+        image: findUser.image,
+        isVerified: findUser.isVerified,
+      };
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: `90d`,
+      });
       return res.status(200).json({
         accessToken: token,
-        user: {
-          _id: findUser._id,
-          name: findUser.name,
-          email: findUser.email,
-          password: findUser.password,
-          image: findUser.image,
-          isVerified: findUser.isVerified,
-        },
+        user: user,
       });
     } else {
       return res.status(403).json({ message: 'Password is not incorrect!' });

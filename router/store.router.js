@@ -6,13 +6,10 @@ import {
   deleteStore,
 } from '../controllers/store.controllers.js';
 import { auth } from '../middleware/auth.js';
-import { config } from '../utils/importFile.js';
-config();
 const routerStore = Router();
 routerStore.use(json());
-const end_point = process.env.END_POINT_STORE;
 routerStore
-  .route(end_point)
+  .route('/api/stores')
   .get(getAllStores)
   .post(createStore)
   .put(updateStore)

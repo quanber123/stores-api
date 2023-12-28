@@ -11,7 +11,7 @@ const settingsSchema = new mongoose.Schema({
     type: Date,
     default: () => Date.now(),
   },
-  notification: [],
+  notifications: [],
 });
 
 export default mongoose.model('Setting', settingsSchema);
