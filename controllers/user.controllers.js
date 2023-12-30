@@ -12,12 +12,12 @@ import settingsModel from '../models/settings.model.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
-  const { email } = req.decoded;
-  const existedOauthUser = email
-    ? await oauthUserModel.findOne({ email: email }).lean()
+  const { user } = req.decoded;
+  const existedOauthUser = user.email
+    ? await oauthUserModel.findOne({ email: user.email }).lean()
     : null;
-  const existedAuthUser = email
-    ? await authUserModel.findOne({ email: email }).lean()
+  const existedAuthUser = user.email
+    ? await authUserModel.findOne({ email: user.email }).lean()
     : null;
   try {
     const [oauthUserResult, authUserResult] = await Promise.all([
@@ -63,7 +63,7 @@ export const userLogin = async (req, res) => {
         image: findUser.image,
         isVerified: findUser.isVerified,
       };
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+      const token = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: `90d`,
       });
       return res.status(200).json({
@@ -101,7 +101,9 @@ export const userRegister = async (req, res) => {
     await user.save();
     const token = jwt.sign(
       {
-        email: user.email,
+        user: {
+          email: user.email,
+        },
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: `90d` }
@@ -138,27 +140,19 @@ export const verifiedAccount = async (req, res) => {
         user: user._id,
         notification: [...allSettingsNotify],
       });
-      const token = jwt.sign(
-        {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          isVerified: user.isVerified,
-        },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: `90d` }
-      );
-      const responseUser = {
+      const user = {
         _id: user._id,
         name: user.name,
         email: user.email,
         image: user.image,
         isVerified: user.isVerified,
       };
+      const token = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: `90d`,
+      });
       return res.status(200).json({
         message: 'Email verified successfully.',
-        user: responseUser,
+        user: user,
         accessToken: token,
       });
     } else {

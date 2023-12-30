@@ -1,10 +1,10 @@
 import express, { urlencoded, static as expressStatic } from 'express';
 import { connectDb } from './config/db.js';
 import { config } from 'dotenv';
+import './passport/passport.js';
 import passport from 'passport';
 import session from 'express-session';
 import uid from 'uid-safe';
-import './passport/passport.js';
 import cors from 'cors';
 import corsOptions from './config/cors.js';
 import routerProduct from './router/product.router.js';

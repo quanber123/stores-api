@@ -59,5 +59,4 @@ routerAuth.get(
     expiresIn: '60m',
   })
 );
-
 export default routerAuth;
