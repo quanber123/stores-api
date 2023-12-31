@@ -3,38 +3,48 @@ import blogModel from '../models/blog.model.js';
 import oauthUserModel from '../models/oauth-user.model.js';
 import tagModel from '../models/tag.model.js';
 export const getAllBlogs = async (req, res) => {
-  const { category, tag, page } = req.query;
+  const { category, tag, arrange, page } = req.query;
   let query = {};
+  let sort = {};
   try {
-    if (category || tag) {
-      const foundCategory = category
-        ? await blogModel.findOne({ name: category })
-        : '';
-      const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
-      if (foundCategory !== '' || foundTag !== '') {
-        query = {};
-        if (foundCategory !== '') {
-          query['category'] = foundCategory?._id;
-        }
-        if (foundTag !== '') {
-          query['tags'] = foundTag?._id;
-        }
-        if (foundCategory && foundTag) {
-          query = {
-            category: foundCategory?._id,
-            tags: foundTag?._id,
-          };
-        }
-      } else {
-        console.log('Category or Tag not found');
+    const foundCategory = category
+      ? await categoryModel.findOne({ name: category })
+      : '';
+    const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
+    if (foundCategory !== '' || foundTag !== '') {
+      if (foundCategory !== '') {
+        query['details.category'] = foundCategory?._id;
       }
+      if (foundTag !== '') {
+        query['details.tags'] = foundTag?._id;
+      }
+      if (foundCategory && foundTag) {
+        query = {
+          'details.category': foundCategory?._id,
+          'details.tags': foundTag?._id,
+        };
+      }
+    }
+    switch (arrange) {
+      case '-date':
+        sort = {
+          created_at: 1,
+        };
+        break;
+      case 'date':
+        sort = {
+          created_at: -1,
+        };
+        break;
+      default:
+        break;
     }
     const totalBlogs = await blogModel.countDocuments(query);
     const total = Math.ceil(totalBlogs / 8);
     const findAllBlogs = await blogModel
       .find(query)
       .populate(['category', 'tags'])
-      .sort({ created_at: -1 })
+      .sort(sort)
       .skip((page - 1) * 8)
       .limit(8)
       .lean();

@@ -8,29 +8,25 @@ export const getAllProducts = async (req, res) => {
   let query = {};
   let sort = {};
   try {
-    if (category || tag) {
-      const foundCategory = category
-        ? await categoryModel.findOne({ name: category })
-        : '';
-      const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
-      if (foundCategory !== '' || foundTag !== '') {
-        query = {};
-        if (foundCategory !== '') {
-          query['details.category'] = foundCategory?._id;
-        }
-        if (foundTag !== '') {
-          query['details.tags'] = foundTag?._id;
-        }
-        if (foundCategory && foundTag) {
-          query = {
-            'details.category': foundCategory?._id,
-            'details.tags': foundTag?._id,
-          };
-        }
-      } else {
-        console.log('Category or Tag not found');
+    const foundCategory = category
+      ? await categoryModel.findOne({ name: category })
+      : '';
+    const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
+    if (foundCategory !== '' || foundTag !== '') {
+      if (foundCategory !== '') {
+        query['details.category'] = foundCategory?._id;
+      }
+      if (foundTag !== '') {
+        query['details.tags'] = foundTag?._id;
+      }
+      if (foundCategory && foundTag) {
+        query = {
+          'details.category': foundCategory?._id,
+          'details.tags': foundTag?._id,
+        };
       }
     }
+
     switch (arrange) {
       case '-date':
         sort = {
