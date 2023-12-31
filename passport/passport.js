@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 import userModel from '../models/oauth-user.model.js';
 import notifyModel from '../models/notify.model.js';
 import settingsModel from '../models/settings.model.js';
+import jwt from 'jsonwebtoken';
 config();
 const google_client_id = process.env.GOOGLE_CLIENT_ID;
 const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
