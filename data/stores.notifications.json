@@ -1,0 +1,24 @@
+[{
+  "_id": {
+    "$oid": "658bce3701c6191f2ac282c4"
+  },
+  "type": "product",
+  "description": "send notifications when new products are available",
+  "enabled": true,
+  "created_at": {
+    "$date": "2023-12-27T07:11:51.545Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "658bcee198ec3dd47e54631a"
+  },
+  "type": "blog",
+  "description": "send notifications when new blogs are available",
+  "enabled": true,
+  "created_at": {
+    "$date": "2023-12-27T07:14:41.752Z"
+  },
+  "__v": 0
+}]
