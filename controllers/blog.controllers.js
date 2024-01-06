@@ -1,11 +1,11 @@
 import authUserModel from '../models/auth-user.model.js';
 import blogModel from '../models/blog.model.js';
 import oauthUserModel from '../models/oauth-user.model.js';
+import categoryModel from '../models/category.model.js';
 import tagModel from '../models/tag.model.js';
 export const getAllBlogs = async (req, res) => {
-  const { category, tag, arrange, page } = req.query;
+  const { category, tag, page } = req.query;
   let query = {};
-  let sort = {};
   try {
     const foundCategory = category
       ? await categoryModel.findOne({ name: category })
@@ -13,43 +13,33 @@ export const getAllBlogs = async (req, res) => {
     const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
     if (foundCategory !== '' || foundTag !== '') {
       if (foundCategory !== '') {
-        query['details.category'] = foundCategory?._id;
+        query['categories'] = foundCategory?._id;
       }
       if (foundTag !== '') {
-        query['details.tags'] = foundTag?._id;
+        query['tags'] = foundTag?._id;
       }
       if (foundCategory && foundTag) {
         query = {
-          'details.category': foundCategory?._id,
-          'details.tags': foundTag?._id,
+          categories: foundCategory?._id,
+          tags: foundTag?._id,
         };
       }
-    }
-    switch (arrange) {
-      case '-date':
-        sort = {
-          created_at: 1,
-        };
-        break;
-      case 'date':
-        sort = {
-          created_at: -1,
-        };
-        break;
-      default:
-        break;
     }
     const totalBlogs = await blogModel.countDocuments(query);
     const total = Math.ceil(totalBlogs / 8);
     const findAllBlogs = await blogModel
       .find(query)
-      .populate(['category', 'tags'])
-      .sort(sort)
+      .populate(['categories', 'tags'])
+      .sort({ created_at: -1 })
       .skip((page - 1) * 8)
       .limit(8)
       .lean();
     if (findAllBlogs) {
-      return res.status(200).json({ blogs: findAllBlogs, totalPage: total });
+      return res.status(200).json({
+        blogs: findAllBlogs,
+        totalPage: total,
+        currentPage: Number(page),
+      });
     } else {
       return res.status(404).json({ messages: 'Not found blogs in database' });
     }
@@ -64,7 +54,7 @@ export const getBlogById = async (req, res) => {
     const [existedBlog, relatedBlogs] = await Promise.all([
       blogModel
         .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
-        .populate(['category', 'tags'])
+        .populate(['categories', 'tags'])
         .populate({
           path: 'comments.user',
           model: 'AuthUser',
@@ -74,20 +64,20 @@ export const getBlogById = async (req, res) => {
           model: 'OauthUser',
         })
         .lean(),
-      blogModel
-        .find({ _id: { $ne: id } })
-        .sort({ created_at: -1 })
-        .populate(['category', 'tags'])
-        .populate({
-          path: 'comments.user',
-          model: 'AuthUser',
-        })
-        .populate({
-          path: 'comments.user',
-          model: 'OauthUser',
-        })
-        .limit(4)
-        .lean(),
+      // blogModel
+      //   .find({ _id: { $ne: id } })
+      //   .sort({ created_at: -1 })
+      //   .populate(['categories', 'tags'])
+      //   .populate({
+      //     path: 'comments.user',
+      //     model: 'AuthUser',
+      //   })
+      //   .populate({
+      //     path: 'comments.user',
+      //     model: 'OauthUser',
+      //   })
+      //   .limit(4)
+      //   .lean(),
     ]);
 
     if (!existedBlog) {
@@ -97,7 +87,7 @@ export const getBlogById = async (req, res) => {
       (a, b) => new Date(b.created_at) - new Date(a.created_at)
     );
 
-    return res.status(200).json({ blog: existedBlog, relatedBlogs });
+    return res.status(200).json({ blog: existedBlog });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error.message });
@@ -119,6 +109,7 @@ export const createBlog = async (req, res) => {
   }
 };
 export const postComment = async (req, res) => {
+  console.log(req.body);
   const { id } = req.params;
   const { userId, text } = req.body;
   try {

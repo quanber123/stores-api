@@ -34,7 +34,7 @@ passport.use(
           await newUser.save();
           await settingsModel.create({
             user: newUser._id,
-            notification: [...allSettingsNotify],
+            notifications: [...allSettingsNotify],
           });
           return done(null, newUser);
         } else {
@@ -66,6 +66,10 @@ passport.use(
             oauthProvider: provider,
           });
           await newUser.save();
+          await settingsModel.create({
+            user: newUser._id,
+            notifications: [...allSettingsNotify],
+          });
           return done(null, newUser);
         } else {
           return done(null, existedUser);

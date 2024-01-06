@@ -63,6 +63,14 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  isSale: {
+    type: Boolean,
+    default: false,
+  },
+  sale: {
+    type: mongoose.SchemaTypes.ObjectId,
+    ref: 'Sale',
+  },
   type: {
     type: String,
     default: () => 'product',
@@ -85,5 +93,5 @@ const productSchema = new mongoose.Schema({
     },
   ],
 });
-
+productSchema.pre('save', function (next) {});
 export default mongoose.model('Product', productSchema);

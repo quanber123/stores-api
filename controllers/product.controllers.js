@@ -1,12 +1,13 @@
+import unidecode from 'unidecode';
 import productModel from '../models/product.model.js';
 import categoryModel from '../models/category.model.js';
 import tagModel from '../models/tag.model.js';
 // Get all products
 
 export const getAllProducts = async (req, res) => {
-  const { category, tag, arrange, page } = req.query;
+  const { category, tag, sort, search, page } = req.query;
   let query = {};
-  let sort = {};
+  let sortQuery = {};
   try {
     const foundCategory = category
       ? await categoryModel.findOne({ name: category })
@@ -27,39 +28,46 @@ export const getAllProducts = async (req, res) => {
       }
     }
 
-    switch (arrange) {
+    switch (sort) {
       case '-date':
-        sort = {
+        sortQuery = {
           created_at: 1,
         };
         break;
       case 'date':
-        sort = {
+        sortQuery = {
           created_at: -1,
         };
         break;
       case '-price':
-        sort = { price: 1 };
+        sortQuery = { price: 1 };
         break;
       case 'price':
-        sort = { price: -1 };
+        sortQuery = { price: -1 };
         break;
       default:
         break;
+    }
+    if (search) {
+      const unaccentedQueryString = unidecode(search);
+      const regex = new RegExp(unaccentedQueryString, 'i');
+      query.name = { $regex: regex };
     }
     const totalProducts = await productModel.countDocuments(query);
     const total = Math.ceil(totalProducts / 8);
     const findAllProducts = await productModel
       .find(query)
-      .sort(sort)
+      .sort(sortQuery)
       .populate(['details.category', 'details.tags'])
       .skip((page - 1) * 8)
       .limit(8)
       .lean();
     if (findAllProducts) {
-      return res
-        .status(200)
-        .json({ products: findAllProducts, totalPage: total });
+      return res.status(200).json({
+        products: findAllProducts,
+        totalPage: total,
+        currentPage: page,
+      });
     } else {
       return res
         .status(404)

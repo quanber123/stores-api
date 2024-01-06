@@ -11,5 +11,5 @@ const routerBlog = Router();
 routerBlog.use(json());
 routerBlog.route('/api/blogs').get(getAllBlogs).post(createBlog);
 routerBlog.route(`/api/blogs/:id`).get(getBlogById);
-routerBlog.route(`/api/:id/comments`).post(postComment);
+routerBlog.route(`/api/blogs/:id/comments`).post(postComment);
 export default routerBlog;

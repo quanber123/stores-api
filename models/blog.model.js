@@ -19,7 +19,7 @@ const blogSchema = new mongoose.Schema({
   body_paragraph: String,
   close_paragraph: String,
   quotes: String,
-  category: [
+  categories: [
     {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Category',

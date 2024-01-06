@@ -138,18 +138,22 @@ export const verifiedAccount = async (req, res) => {
       await user.save();
       await settingsModel.create({
         user: user._id,
-        notification: [...allSettingsNotify],
+        notifications: [...allSettingsNotify],
       });
-      const user = {
+      const responseUser = {
         _id: user._id,
         name: user.name,
         email: user.email,
         image: user.image,
         isVerified: user.isVerified,
       };
-      const token = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: `90d`,
-      });
+      const token = jwt.sign(
+        { user: responseUser },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: `90d`,
+        }
+      );
       return res.status(200).json({
         message: 'Email verified successfully.',
         user: user,
@@ -261,9 +265,9 @@ export const toggleNotifications = async (req, res) => {
   const { id, enabled, idNotify } = req.body;
   try {
     const updatedSettings = await settingsModel.findOneAndUpdate(
-      { user: id, notification: { $elemMatch: { _id: idNotify } } },
+      { user: id, notifications: { $elemMatch: { _id: idNotify } } },
       {
-        $set: { 'notification.$.enabled': !enabled, updated_at: Date.now() },
+        $set: { 'notifications.$.enabled': !enabled, updated_at: Date.now() },
       },
       {
         new: true,
@@ -271,7 +275,7 @@ export const toggleNotifications = async (req, res) => {
     );
     if (updatedSettings)
       return res.status(200).json({ message: 'Updated Successfully!' });
-    return res.status(404).json({ message: `Not found by settings id: ${id}` });
+    return res.status(404).json({ message: `Updated Failed!` });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error.' });
   }
