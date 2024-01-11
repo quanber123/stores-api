@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
-import categoryModel from '../models/category.model.js';
-import tagModel from '../models/tag.model.js';
-import storeModel from '../models/store.model.js';
-import publisherModel from '../models/publisher.model.js';
+import categoryModel from '../models/category/category.model.js';
+import tagModel from '../models/tag/tag.model.js';
+import storeModel from '../models/product/store.model.js';
+import publisherModel from '../models/product/publisher.model.js';
 const getRandomElements = (array, numberOfElements) => {
   const shuffledArray = [...array].sort(() => 0.5 - Math.random());
   return shuffledArray.slice(0, numberOfElements);
@@ -33,6 +33,9 @@ export const generateFakeProduct = async () => {
     name: faker.commerce.productName(),
     images: images,
     price: faker.number.int({ min: 10, max: 1000, precision: 0.01 }),
+    sale: null,
+    salePrice: 0,
+    finalPrice: 0,
     details: {
       variants: variants,
       category: getRandomElements(category, 1)[0]._id,
@@ -52,14 +55,6 @@ export const generateFakeProduct = async () => {
       publishers: getRandomElements(publishers, 1)[0]._id,
     },
     reviews: [],
-    // reviews:   Array.from(
-    //     { length: faker.number.int({ min: 0, max: 10 }) },
-    //     () => ({
-    //       avatar: faker.internet.avatar(),
-    //       content: faker.lorem.paragraph(),
-    //       vote: faker.random.number({ min: 1, max: 5 }),
-    //     })
-    //   ),
   };
 
   return fakeProduct;

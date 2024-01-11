@@ -7,19 +7,21 @@ import session from 'express-session';
 import uid from 'uid-safe';
 import cors from 'cors';
 import corsOptions from './config/cors.js';
-import routerProduct from './router/product.router.js';
-import routerStore from './router/store.router.js';
-import routerPublisher from './router/publisher.router.js';
-import routerTag from './router/tag.router.js';
-import routerCategory from './router/category.router.js';
-import routerUser from './router/user.router.js';
-import routerAuth from './router/auth.router.js';
-import routerBanner from './router/banner.router.js';
-import routerBlog from './router/blog.router.js';
-import routerNotify from './router/notify.router.js';
+import routerProduct from './router/product/product.router.js';
+import routerStore from './router/product/store.router.js';
+import routerPublisher from './router/product/publisher.router.js';
+import routerTag from './router/tag/tag.router.js';
+import routerCategory from './router/category/category.router.js';
+import routerUser from './router/user/user.router.js';
+import routerAuth from './router/user/auth.router.js';
+import routerBanner from './router/product/banner.router.js';
+import routerBlog from './router/blog/blog.router.js';
+import routerNotify from './router/user/notify.router.js';
 import { generateFakeBlog, generateFakeProduct } from './middleware/tools.js';
-import productModel from './models/product.model.js';
-import blogModel from './models/blog.model.js';
+import productModel from './models/product/product.model.js';
+import blogModel from './models/blog/blog.model.js';
+import routerSale from './router/product/sale.router.js';
+import routerCart from './router/product/cart.router.js';
 config();
 connectDb();
 const app = express();
@@ -52,7 +54,7 @@ async function seedBlogData() {
   const BLOGS = await Promise.all(Array.from({ length: 50 }, generateFakeBlog));
   await blogModel.insertMany(BLOGS);
 }
-// seedBlogData()
+// seedProductData()
 //   .then(() => {
 //     console.log('Data seeded successfully.');
 //   })
@@ -69,7 +71,9 @@ app.use(routerStore);
 app.use(routerPublisher);
 app.use(routerTag);
 app.use(routerCategory);
+app.use(routerSale);
 app.use(routerNotify);
+app.use(routerCart);
 app.use(routerUser);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
