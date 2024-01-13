@@ -5,10 +5,11 @@ import { config } from 'dotenv';
 import userModel from '../models/user/oauth-user.model.js';
 import notifyModel from '../models/user/notify.model.js';
 import settingsModel from '../models/user/settings.model.js';
-import jwt from 'jsonwebtoken';
 config();
 const google_client_id = process.env.GOOGLE_CLIENT_ID;
 const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
+// console.log(google_client_id);
+// console.log(google_client_secret);
 const facebook_client_id = process.env.FACEBOOK_CLIENT_ID;
 const facebook_client_secret = process.env.FACEBOOK_CLIENT_SECRET;
 passport.use(

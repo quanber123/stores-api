@@ -61,6 +61,13 @@ async function seedBlogData() {
 //   .catch((error) => {
 //     console.error('Error seeding data:', error.message);
 //   });
+// seedBlogData()
+//   .then(() => {
+//     console.log('Data seeded successfully.');
+//   })
+//   .catch((error) => {
+//     console.error('Error seeding data:', error.message);
+//   });
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(routerAuth);

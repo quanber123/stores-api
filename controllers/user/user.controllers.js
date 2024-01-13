@@ -97,6 +97,7 @@ export const userRegister = async (req, res) => {
       email: email,
       password: hashedPassword,
       verificationCode: verificationCode,
+      isVerified: false,
     });
     await user.save();
     const token = jwt.sign(

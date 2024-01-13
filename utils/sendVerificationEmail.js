@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-
 export const sendVerificationEmail = (email, verificationCode) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
