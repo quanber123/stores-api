@@ -96,4 +96,12 @@ const productSchema = new mongoose.Schema({
     },
   ],
 });
+productSchema.pre('save', function (next) {
+  if (this.sale && this.salePrice) {
+    this.finalPrice = this.salePrice;
+  } else {
+    this.finalPrice = this.price;
+  }
+  next();
+});
 export default mongoose.model('Product', productSchema);

@@ -71,10 +71,7 @@ export const generateFakeBlog = async () => {
     body_paragraph: faker.lorem.paragraph(),
     close_paragraph: faker.lorem.sentence(),
     quotes: faker.lorem.sentence(),
-    categories: getRandomElements(
-      category,
-      faker.number.int({ min: 1, max: 5 })
-    ),
+    categories: getRandomElements(category, 1)[0]._id,
     tags: getRandomElements(tags, faker.number.int({ min: 1, max: 5 })),
   };
   return fakeBlog;

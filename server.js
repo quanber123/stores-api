@@ -48,11 +48,11 @@ async function seedProductData() {
   const PRODUCTS = await Promise.all(
     Array.from({ length: 50 }, generateFakeProduct)
   );
-  await productModel.insertMany(PRODUCTS);
+  await productModel.create(PRODUCTS);
 }
 async function seedBlogData() {
   const BLOGS = await Promise.all(Array.from({ length: 50 }, generateFakeBlog));
-  await blogModel.insertMany(BLOGS);
+  await blogModel.create(BLOGS);
 }
 // seedProductData()
 //   .then(() => {
