@@ -215,7 +215,7 @@ export const updateProfile = async (req, res) => {
 };
 
 export const updateAvatar = async (req, res) => {
-  const { id } = req.body;
+  const { id } = req.params;
   const file = req.file;
   try {
     if (!file) {

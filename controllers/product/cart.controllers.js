@@ -88,7 +88,7 @@ export const deleteManyCarts = async (req, res) => {
   const { products } = req.body;
   try {
     const deleteAllProducts = products.map(async (p) => {
-      return await cartModel.findByIdAndDelete(p);
+      return await cartModel.findByIdAndDelete(p._id);
     });
     await Promise.all(deleteAllProducts);
     return res.status(200).json({ message: 'Deleted Successfully!' });

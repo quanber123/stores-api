@@ -51,7 +51,6 @@ const detailSchema = new mongoose.Schema({
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
-    lowercase: true,
     required: true,
   },
   images: [

@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const blogSchema = new mongoose.Schema({
   author: {
     type: String,
-    lowercase: true,
   },
   imgSrc: String,
   title: String,

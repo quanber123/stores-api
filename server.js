@@ -22,6 +22,7 @@ import productModel from './models/product/product.model.js';
 import blogModel from './models/blog/blog.model.js';
 import routerSale from './router/product/sale.router.js';
 import routerCart from './router/product/cart.router.js';
+import routerPayment from './router/product/payment.router.js';
 config();
 connectDb();
 const app = express();
@@ -82,6 +83,7 @@ app.use(routerSale);
 app.use(routerNotify);
 app.use(routerCart);
 app.use(routerUser);
+app.use(routerPayment);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });

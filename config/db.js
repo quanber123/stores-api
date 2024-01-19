@@ -5,8 +5,8 @@ export const connectDb = async () => {
     const password = process.env.DATABASE_PASSWORD;
     const db_name = process.env.DATABASE_NAME;
     await mongoose.connect(
-      // `mongodb://${username}:${password}@127.0.0.1/${db_name}?authSource=admin`
-      `mongodb://${username}:${password}@127.0.0.1/${db_name}`
+      `mongodb://${username}:${password}@127.0.0.1/${db_name}?authSource=admin`
+      // `mongodb://${username}:${password}@127.0.0.1/${db_name}`
     );
     console.log('connected!');
   } catch (error) {
