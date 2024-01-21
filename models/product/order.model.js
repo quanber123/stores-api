@@ -7,6 +7,8 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: String,
   paymentInfo: {
+    message: String,
+    address: String,
     products: [
       {
         id: String,

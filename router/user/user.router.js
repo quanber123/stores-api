@@ -16,7 +16,6 @@ import {
   createAddress,
   deleteAddress,
   getAllAddress,
-  getDefaultAddress,
   updateAddress,
 } from '../../controllers/user/address.controllers.js';
 const routerUser = Router();
@@ -34,7 +33,6 @@ routerUser
   .route('/api/users/address')
   .get(auth, getAllAddress)
   .post(auth, createAddress);
-routerUser.route('/api/users/address/default').get(auth, getDefaultAddress);
 routerUser
   .route('/api/users/address/:id')
   .put(auth, updateAddress)

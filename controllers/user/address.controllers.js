@@ -3,21 +3,11 @@ import addressModel from '../../models/user/address.model.js';
 export const getAllAddress = async (req, res) => {
   const { user } = req.decoded;
   try {
-    const address = await addressModel.find({ userId: user._id });
+    const address = await addressModel
+      .find({ userId: user._id })
+      .sort({ isDefault: -1 });
     if (address) return res.status(200).json(address);
     return res.status(404).json({ message: 'Not found addresses!' });
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error.' });
-  }
-};
-export const getDefaultAddress = async (req, res) => {
-  const { user } = req.decoded;
-  try {
-    const address = await addressModel.findOne({
-      userId: user._id,
-      isDefault: true,
-    });
-    return res.status(200).json(address);
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error.' });
   }
@@ -39,8 +29,10 @@ export const createAddress = async (req, res) => {
       userId: user._id,
       name: name,
       phone: phone,
+      state: state,
+      city: city,
       district: district,
-      address: address,
+      address: address.replace('.', ''),
       isDefault: isDefault,
     };
     const defaultAddress = await addressModel.findOne({ isDefault: true });
@@ -59,7 +51,7 @@ export const createAddress = async (req, res) => {
 export const updateAddress = async (req, res) => {
   const { user } = req.decoded;
   const { id } = req.params;
-  const { name, phone, state, city, district, address } = req.body;
+  const { name, phone, state, city, district, address, isDefault } = req.body;
   try {
     if (!state || !city || !district || !address)
       return res
@@ -71,7 +63,15 @@ export const updateAddress = async (req, res) => {
       phone: phone,
       district: district,
       address: address,
+      isDefault: isDefault,
     };
+    if (isDefault) {
+      const defaultAddress = await addressModel.findOne({
+        isDefault: isDefault,
+      });
+      defaultAddress.isDefault = false;
+      await defaultAddress.save();
+    }
     const updatedAddress = await addressModel.findByIdAndUpdate(
       id,
       userAddress

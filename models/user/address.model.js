@@ -12,7 +12,6 @@ const addressSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  district: String,
   geoinfo: {
     region: {
       latitude: {

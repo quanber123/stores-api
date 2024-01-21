@@ -5,7 +5,7 @@ import { payOs } from '../../utils/payos.js';
 export const createTransferLink = async (req, res) => {
   const { user } = req.decoded;
   const client_url = process.env.CLIENT_URL;
-  const { products, totalPrice } = req.body;
+  const { products, totalPrice, message, address } = req.body;
   try {
     const body = {
       orderCode: Number(String(Date.now()).slice(-6)),
@@ -21,6 +21,8 @@ export const createTransferLink = async (req, res) => {
       paymentInfo: {
         products: products.map((p) => p.product),
         ...paymentLinkResponse,
+        message: message,
+        address: address,
       },
     });
     const updatedCarts = products.map(
@@ -36,7 +38,7 @@ export const createTransferLink = async (req, res) => {
 
 export const createCashPayment = async (req, res) => {
   const { user } = req.decoded;
-  const { products, totalPrice } = req.body;
+  const { products, totalPrice, message, address } = req.body;
   try {
     const order = await orderModel.create({
       user: user._id,
@@ -46,6 +48,8 @@ export const createCashPayment = async (req, res) => {
         orderCode: Number(String(Date.now()).slice(-6)),
         amount: totalPrice,
         status: 'PENDING',
+        message: message,
+        address: address,
       },
     });
     const updatedCarts = products.map(
