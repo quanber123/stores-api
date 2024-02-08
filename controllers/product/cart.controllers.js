@@ -1,13 +1,20 @@
 import cartModel from '../../models/product/cart.model.js';
+// import { totalPage } from '../../utils/totalPage.js';
 
 export const getAllCarts = async (req, res) => {
   const { user } = req.decoded;
+  // const { currPage } = req.query;
+
   try {
+    // const skip = (currPage - 1) * 8;
     const total = await cartModel.countDocuments({ userId: user._id });
-    const existedProducts = await cartModel.find({ userId: user._id }).lean();
-    if (existedProducts)
-      return res.status(200).json({ cart: existedProducts, total: total });
-    return res.status(409).json({ message: 'Your cart now is empty!' });
+    // const page = totalPage(total, 8);
+    const existedProducts = await cartModel
+      .find({ userId: user._id })
+      // .skip(skip)
+      // .limit(8)
+      .lean();
+    return res.status(200).json({ cart: existedProducts, total: total });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

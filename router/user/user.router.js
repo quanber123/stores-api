@@ -18,6 +18,10 @@ import {
   getAllAddress,
   updateAddress,
 } from '../../controllers/user/address.controllers.js';
+import {
+  getAllFavorites,
+  postFavorites,
+} from '../../controllers/product/favorite.controllers.js';
 const routerUser = Router();
 routerUser.use(json());
 routerUser.route('/api/auth/verify-email').post(verifiedAccount);
@@ -29,6 +33,10 @@ routerUser.route('/api/users/profile').put(auth, updateProfile);
 routerUser.route('/api/users/:id/avatar').put(auth, uploadImg, updateAvatar);
 routerUser.route('/api/settings/:id').get(auth, getAllSettings);
 routerUser.route('/api/settings').put(auth, toggleNotifications);
+routerUser
+  .route('/api/users/favorites')
+  .get(auth, getAllFavorites)
+  .post(auth, postFavorites);
 routerUser
   .route('/api/users/address')
   .get(auth, getAllAddress)

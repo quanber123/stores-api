@@ -1,6 +1,4 @@
 import mongoose from 'mongoose';
-import saleModel from './sale.model.js';
-import tagModel from '../tag/tag.model.js';
 const variantSchema = new mongoose.Schema({
   size: {
     type: String,
@@ -88,12 +86,12 @@ const productSchema = new mongoose.Schema({
     default: () => Date.now(),
   },
   details: detailSchema,
-  reviews: [
-    {
-      type: mongoose.SchemaTypes.ObjectId,
-      ref: 'Reviews',
-    },
-  ],
+  // reviews: [
+  //   {
+  //     type: mongoose.SchemaTypes.ObjectId,
+  //     ref: 'Reviews',
+  //   },
+  // ],
 });
 productSchema.pre('save', function (next) {
   if (this.sale && this.salePrice) {

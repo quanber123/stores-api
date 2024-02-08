@@ -22,3 +22,16 @@ export function validateImage(file) {
   const extension = file.name.split('.').pop()?.toLowerCase() || '';
   return allowedExtensions.includes(extension);
 }
+
+export const hidePartialUsername = (username, visibleChars = 3) => {
+  if (visibleChars >= username.length) {
+    return username;
+  } else {
+    const hiddenChars = username.length - visibleChars - 1;
+    const hiddenPart = '*'.repeat(hiddenChars);
+    const visiblePart = username.slice(0, visibleChars);
+    const lastChar = username.slice(-1);
+    const hiddenUsername = visiblePart + hiddenPart + lastChar;
+    return hiddenUsername;
+  }
+};

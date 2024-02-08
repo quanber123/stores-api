@@ -1,14 +1,29 @@
+import {
+  DEFAULT_EXPIRATION,
+  checkCache,
+  deleteCache,
+  updateCache,
+} from '../../middleware/cache.js';
 import categoryModel from '../../models/category/category.model.js';
+import { client } from '../../server.js';
 // Get All Categories
-
 export const getAllCategories = async (req, res) => {
   try {
-    const findAllCategories = await categoryModel.find().lean();
-    if (findAllCategories) {
-      return res.status(200).json(findAllCategories);
-    }
+    const categories = await checkCache('categories:*', async () => {
+      const categories = await categoryModel.find().lean();
+      const cachedData = categories.map(async (item) => {
+        await client.setEx(
+          `${key.replace('*', `${item._id}`)}`,
+          DEFAULT_EXPIRATION,
+          JSON.stringify(categories)
+        );
+      });
+      await Promise.all(cachedData);
+      return categories;
+    });
+    return res.status(200).json(categories);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -29,6 +44,7 @@ export const createCategory = async (req, res) => {
     } else {
       const newCategory = new categoryModel(category);
       const savedCategory = await newCategory.save();
+      client.setEx(`categories:${savedCategory._id}`);
       return res.status(200).json(savedCategory);
     }
   } catch (error) {
@@ -42,18 +58,13 @@ export const updateCategory = async (req, res) => {
   const { id } = req.params;
   const category = req.body;
   try {
-    const existingCategory = await categoryModel.findById(id).lean();
-    if (existingCategory) {
+    const updatedCategory = await categoryModel.findByIdAndUpdate(id, category);
+    if (!updatedCategory) {
       return res
         .status(404)
         .json({ message: `Not found Category by id: ${id}` });
     } else {
-      const updatedCategory = await categoryModel
-        .findByIdAndUpdate({
-          _id: id,
-          category,
-        })
-        .lean();
+      await updateCache(`categories:${id}`, updatedCategory);
       return res.status(200).json(updatedCategory);
     }
   } catch (error) {
@@ -66,13 +77,13 @@ export const updateCategory = async (req, res) => {
 export const deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
-    const existingCategory = await categoryModel.findById(id).lean();
-    if (existingCategory) {
+    const deletedCategory = await categoryModel.findByIdAndDelete(id);
+    if (!deletedCategory) {
       return res
         .status(404)
         .json({ message: `Not found Category by id: ${id}` });
     } else {
-      const deletedCategory = await categoryModel.findByIdAndDelete(id).lean();
+      await deleteCache(`categories:${id}`, deletedCategory);
       return res.status(200).json(deletedCategory);
     }
   } catch (error) {

@@ -1,5 +1,6 @@
 import cartModel from '../../models/product/cart.model.js';
 import orderModel from '../../models/product/order.model.js';
+import productModel from '../../models/product/product.model.js';
 import { payOs } from '../../utils/payos.js';
 
 export const createTransferLink = async (req, res) => {
@@ -137,8 +138,25 @@ export const updateOrder = async (req, res) => {
       {
         'paymentInfo.status': status,
         updated_at: Date.now(),
-      }
+      },
+      { new: true }
     );
+    if (status === 'PAID') {
+      const updatedProducts = updatedOrder.paymentInfo.products.map(
+        async (p) =>
+          await productModel.findOneAndUpdate(
+            {
+              _id: p.id,
+              'details.variants.size': p.size,
+              'details.variants.color': p.color,
+            },
+            {
+              $inc: { 'details.variants.$.quantity': -p.quantity },
+            }
+          )
+      );
+      Promise.all(updatedProducts);
+    }
     if (updatedOrder && updatedOrder.paymentMethod === 'transfer') {
       await payOs.cancelPaymentLink(orderId, status.cancellationReason);
     }
