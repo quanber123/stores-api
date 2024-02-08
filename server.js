@@ -23,6 +23,7 @@ import blogModel from './models/blog/blog.model.js';
 import routerSale from './router/product/sale.router.js';
 import routerCart from './router/product/cart.router.js';
 import routerPayment from './router/product/payment.router.js';
+import { createClient } from 'redis';
 config();
 connectDb();
 const app = express();
@@ -55,6 +56,19 @@ async function seedBlogData() {
   const BLOGS = await Promise.all(Array.from({ length: 50 }, generateFakeBlog));
   await blogModel.create(BLOGS);
 }
+export const client = createClient();
+
+(async () => {
+  client.on('error', (err) => {
+    console.log('Redis Client Error', err);
+  });
+  client.on('ready', () => console.log('Redis is ready'));
+
+  await client.connect();
+
+  await client.ping();
+})();
+
 // seedProductData()
 //   .then(() => {
 //     console.log('Data seeded successfully.');
