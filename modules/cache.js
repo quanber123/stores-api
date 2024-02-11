@@ -1,13 +1,15 @@
-import { client } from '../server.js';
+import { client } from '../config/redis.js';
 export const DEFAULT_EXPIRATION = 1 * 60 * 60 * 24 * 30;
-
 export const checkCache = async (key, cb) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const data = await client.scan(key);
-      if (data) return resolve(JSON.parse(data));
-      const freshData = await cb();
-      resolve(freshData);
+      const data = await client.get(key);
+      if (data) {
+        return resolve(JSON.parse(data));
+      } else {
+        const freshData = await cb();
+        resolve(freshData);
+      }
     } catch (error) {
       reject(error);
     }

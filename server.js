@@ -1,7 +1,7 @@
 import express, { urlencoded, static as expressStatic } from 'express';
 import { connectDb } from './config/db.js';
 import { config } from 'dotenv';
-import './passport/passport.js';
+import './modules/passport.js';
 import passport from 'passport';
 import session from 'express-session';
 import uid from 'uid-safe';
@@ -23,8 +23,9 @@ import blogModel from './models/blog/blog.model.js';
 import routerSale from './router/product/sale.router.js';
 import routerCart from './router/product/cart.router.js';
 import routerPayment from './router/product/payment.router.js';
-import { createClient } from 'redis';
+import { connectRedis } from './config/redis.js';
 config();
+connectRedis();
 connectDb();
 const app = express();
 const port = process.env.PORT;
@@ -56,19 +57,6 @@ async function seedBlogData() {
   const BLOGS = await Promise.all(Array.from({ length: 50 }, generateFakeBlog));
   await blogModel.create(BLOGS);
 }
-export const client = createClient();
-
-(async () => {
-  client.on('error', (err) => {
-    console.log('Redis Client Error', err);
-  });
-  client.on('ready', () => console.log('Redis is ready'));
-
-  await client.connect();
-
-  await client.ping();
-})();
-
 // seedProductData()
 //   .then(() => {
 //     console.log('Data seeded successfully.');

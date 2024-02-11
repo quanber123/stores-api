@@ -10,187 +10,70 @@ import {
 import reviewsModel from '../../models/product/reviews.model.js';
 import { hidePartialUsername } from '../../utils/validate.js';
 import { totalPage } from '../../utils/totalPage.js';
-import { client } from '../../server.js';
+import { client } from '../../config/redis.js';
 // Get all products
-const addProductsToRedis = async (product, timestamp) => {
-  client.zadd('products', timestamp, product, (err, reply) => {
-    if (err) {
-      console.error('Error adding product to Redis:', err);
-      return;
-    }
-    console.log('Product added to Redis:', product);
-  });
-};
-const getProducts = async (category, tag, sort, search, page) => {
-  let query = {};
-  let sortQuery = {};
-  const foundCategory = category
-    ? await categoryModel.findOne({ name: category })
-    : '';
-  const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
-  if (foundCategory !== '' || foundTag !== '') {
-    if (foundCategory !== '') {
-      query['details.category'] = foundCategory?._id;
-    }
-    if (foundTag !== '') {
-      query['details.tags'] = foundTag?._id;
-    }
-    if (foundCategory && foundTag) {
-      query = {
-        'details.category': foundCategory?._id,
-        'details.tags': foundTag?._id,
-      };
-    }
-  }
-
-  switch (sort) {
-    case '-date':
-      sortQuery = {
-        created_at: 1,
-      };
-      break;
-    case 'date':
-      sortQuery = {
-        created_at: -1,
-      };
-      break;
-    case '-price':
-      sortQuery = { price: 1 };
-      break;
-    case 'price':
-      sortQuery = { price: -1 };
-      break;
-    default:
-      break;
-  }
-  const totalProducts = await productModel.countDocuments(query);
-  const total = Math.ceil(totalProducts / 8);
-  const findAllProducts = await productModel
-    .find(query)
-    .sort(sortQuery)
-    .populate(['details.category', 'details.tags'])
-    .populate('sale')
-    .skip((page - 1) * 8)
-    .limit(8)
-    .lean();
-  if (findAllProducts) {
-    return res.status(200).json({
-      products: findAllProducts,
-      totalPage: total,
-      currentPage: page,
-    });
-  }
-  return res.status(404).json({ messages: 'Not found products in database' });
-};
-// export const getAllProducts = async (req, res) => {
-//   const { category, tag, sort, search, page } = req.query;
-//   try {
-//     const start = (Number(page) - 1) * 8;
-//     const end = Number(page) * 8;
-//     const zrangeArgs = ['products', start, end, 'WITHSCORES'];
-//     if (tag) {
-//       zrangeArgs.unshift('tags:' + tag);
-//     }
-//     if (category) {
-//       zrangeArgs.unshift('categories:' + category);
-//     }
-//     // if (search) {
-//     //   const unaccentedQueryString = unidecode(search);
-//     //   const regex = new RegExp(unaccentedQueryString, 'i');
-//     //   query.name = { $regex: regex };
-//     // }
-//     client.zRange(...zrangeArgs, async (err, products) => {
-//       if (err) {
-//         console.error('Error fetching products from Redis:', err);
-//         return;
-//       }
-//       if (products.length === 0) {
-//         const productsFromMongo = await getProducts(
-//           category,
-//           tag,
-//           sort,
-//           search,
-//           page
-//         );
-//         productsFromMongo.forEach((item) => {
-//           addProductsToRedis(item, new Date(item.created_at).getTime());
-//         });
-//       } else {
-//         client.zcard('products', (err, totalItems) => {
-//           if (err) {
-//             console.error('Error fetching total items from Redis:', err);
-//             return;
-//           }
-//           const totalPages = Math.ceil(totalItems / 8);
-//           return res.status(200).json({
-//             products: products,
-//             totalPage: totalPages,
-//             currentPage: page,
-//           });
-//         });
-//       }
-//     });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
 export const getAllProducts = async (req, res) => {
   const { category, tag, sort, search, page } = req.query;
   try {
-    const start = (Number(page) - 1) * 8;
-    const end = Number(page) * 8;
-    let zrangeArgs = ['products', start, end];
-    if (tag) {
-      zrangeArgs = ['products:tags:' + tag, start, end];
-    }
-    if (category) {
-      zrangeArgs = ['products:categories:' + category, start, end];
+    let query = {};
+    let sortQuery = {};
+    const foundCategory = category
+      ? await categoryModel.findOne({ name: category })
+      : '';
+    const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
+    if (foundCategory !== '' || foundTag !== '') {
+      if (foundCategory !== '') {
+        query['details.category'] = foundCategory?._id;
+      }
+      if (foundTag !== '') {
+        query['details.tags'] = foundTag?._id;
+      }
+      if (foundCategory && foundTag) {
+        query = {
+          'details.category': foundCategory?._id,
+          'details.tags': foundTag?._id,
+        };
+      }
     }
 
-    client.zRange(...zrangeArgs, async (err, products) => {
-      console.log(products);
-      if (err) {
-        console.error('Error fetching products from Redis:', err);
-        return res.status(500).json({ error: 'Internal Server Error' });
-      }
-      if (products.length === 0) {
-        try {
-          const productsFromMongo = await getProducts(
-            category,
-            tag,
-            sort,
-            search,
-            page
-          );
-          productsFromMongo.forEach((item) => {
-            addProductsToRedis(item, new Date(item.created_at).getTime());
-          });
-          const totalItems = await productModel.countDocuments();
-          const totalPages = Math.ceil(totalItems / 8);
-          return res.status(200).json({
-            products: productsFromMongo,
-            totalPage: totalPages,
-            currentPage: page,
-          });
-        } catch (error) {
-          console.error('Error fetching products from MongoDB:', error);
-          return res.status(500).json({ error: 'Internal Server Error' });
-        }
-      } else {
-        client.zcard('products', (err, totalItems) => {
-          if (err) {
-            console.error('Error fetching total items from Redis:', err);
-            return res.status(500).json({ error: 'Internal Server Error' });
-          }
-          const totalPages = Math.ceil(totalItems / 8);
-          return res.status(200).json({
-            products: products,
-            totalPage: totalPages,
-            currentPage: page,
-          });
-        });
-      }
-    });
+    switch (sort) {
+      case '-date':
+        sortQuery = {
+          created_at: 1,
+        };
+        break;
+      case 'date':
+        sortQuery = {
+          created_at: -1,
+        };
+        break;
+      case '-price':
+        sortQuery = { price: 1 };
+        break;
+      case 'price':
+        sortQuery = { price: -1 };
+        break;
+      default:
+        break;
+    }
+    const totalProducts = await productModel.countDocuments(query);
+    const total = Math.ceil(totalProducts / 8);
+    const findAllProducts = await productModel
+      .find(query)
+      .sort(sortQuery)
+      .populate(['details.category', 'details.tags'])
+      .populate('sale')
+      .skip((page - 1) * 8)
+      .limit(8)
+      .lean();
+    if (findAllProducts) {
+      return res.status(200).json({
+        products: findAllProducts,
+        totalPage: total,
+        currentPage: page,
+      });
+    }
+    return res.status(404).json({ messages: 'Not found products in database' });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: 'Internal Server Error' });
