@@ -1,31 +1,24 @@
 import { json } from 'express';
-import { client } from '../../config/redis.js';
+import { redisClient } from '../../config/redis.js';
 import tagModel from '../../models/tag/tag.model.js';
 import {
-  DEFAULT_EXPIRATION,
-  checkCache,
   deleteCache,
+  firstLoadingCache,
   updateCache,
 } from '../../modules/cache.js';
 // Get All Tags
 
 export const getAllTags = async (req, res) => {
+  let cachedTags;
+  let tags;
   try {
-    const tags = await checkCache('tags:*', async () => {
-      const findAllTags = await tagModel.find().lean();
-      if (findAllTags.length) {
-        const cachedData = findAllTags.map(async (item) => {
-          await client.setEx(
-            `${'tags:*'.replace('*', `${item._id}`)}`,
-            DEFAULT_EXPIRATION,
-            JSON.stringify(item)
-          );
-        });
-        await Promise.all(cachedData);
-      }
-      return findAllTags;
-    });
-    return res.status(200).json(tags);
+    cachedTags = await firstLoadingCache('tags:*', tagModel, []);
+    if (cachedTags !== null) {
+      return res.status(200).json(cachedTags);
+    } else {
+      tags = await tagModel.find().lean();
+      return res.status(200).json(tags !== null ? tags : []);
+    }
   } catch (error) {
     return res.status(500).json({ message: 'Internal Server Error' });
   }
@@ -46,7 +39,7 @@ export const createTag = async (req, res) => {
     } else {
       const newTag = new tagModel(tag);
       const savedTag = await newTag.save();
-      client.setEx(`tags:${savedTag._id}`);
+      redisClient.setEx(`tags:${savedTag._id}`);
       return res.status(200).json(savedTag);
     }
   } catch (error) {

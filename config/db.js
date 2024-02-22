@@ -8,7 +8,7 @@ export const connectDb = async () => {
       `mongodb://${username}:${password}@127.0.0.1/${db_name}?authSource=admin`
       // `mongodb://${username}:${password}@127.0.0.1/${db_name}`
     );
-    console.log('connected!');
+    console.log('mongodb connected!');
   } catch (error) {
     console.error(error);
   }

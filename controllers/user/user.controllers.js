@@ -9,23 +9,24 @@ import { sendVerificationEmail } from '../../utils/sendVerificationEmail.js';
 import { allowedExtensions } from '../../config/allow.js';
 import notifyModel from '../../models/user/notify.model.js';
 import settingsModel from '../../models/user/settings.model.js';
+import { checkCache } from '../../modules/cache.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
   const { user } = req.decoded;
-  const existedOauthUser = user.email
-    ? await oauthUserModel.findOne({ email: user.email }).lean()
-    : null;
-  const existedAuthUser = user.email
-    ? await authUserModel.findOne({ email: user.email }).lean()
-    : null;
   try {
-    const [oauthUserResult, authUserResult] = await Promise.all([
-      existedOauthUser,
-      existedAuthUser,
-    ]);
-    if (existedOauthUser || existedAuthUser) {
-      return res.status(200).json({
+    const getUser = await checkCache(`users:${user.email}`, async () => {
+      const existedOauthUser = user.email
+        ? await oauthUserModel.findOne({ email: user.email }).lean()
+        : null;
+      const existedAuthUser = user.email
+        ? await authUserModel.findOne({ email: user.email }).lean()
+        : null;
+      const [oauthUserResult, authUserResult] = await Promise.all([
+        existedOauthUser,
+        existedAuthUser,
+      ]);
+      return {
         user: {
           _id: oauthUserResult?._id || authUserResult?._id,
           email: oauthUserResult?.email || authUserResult?.email,
@@ -33,9 +34,12 @@ export const getUserByToken = async (req, res) => {
           image: oauthUserResult?.image || authUserResult?.image,
           isVerified: oauthUserResult?.isVerified || authUserResult?.isVerified,
         },
-      });
+      };
+    });
+    if (getUser !== null) {
+      return res.status(200).json(getUser);
     } else {
-      return res.status(404).json({ message: `Not found user ${email}` });
+      return res.status(404).json({ message: `Not found user ${user.email}` });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -64,7 +68,7 @@ export const userLogin = async (req, res) => {
         isVerified: findUser.isVerified,
       };
       const token = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: `90d`,
+        expiresIn: process.env.DEFAULT_EXPIRATION,
       });
       return res.status(200).json({
         accessToken: token,
@@ -107,7 +111,7 @@ export const userRegister = async (req, res) => {
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: `90d` }
+      { expiresIn: process.env.DEFAULT_EXPIRATION }
     );
     sendVerificationEmail(email, verificationCode);
 
@@ -152,7 +156,7 @@ export const verifiedAccount = async (req, res) => {
         { user: responseUser },
         process.env.ACCESS_TOKEN_SECRET,
         {
-          expiresIn: `90d`,
+          expiresIn: process.env.DEFAULT_EXPIRATION,
         }
       );
       return res.status(200).json({

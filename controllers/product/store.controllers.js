@@ -1,21 +1,21 @@
+import { redisClient } from '../../config/redis.js';
 import storeModel from '../../models/product/store.model.js';
+import { firstLoadingCache } from '../../modules/cache.js';
 
 // Get All Store
 
 export const getAllStores = async (req, res) => {
-  const { stores, page } = req.query;
   try {
-    const totalStores = await storeModel.countDocuments();
-    const total = Math.ceil(totalStores / stores);
-    const findAllStores = await storeModel
-      .find()
-      .skip((page - 1) * stores)
-      .limit(stores)
-      .lean();
-    if (findAllStores) {
-      return res.status(200).json({ stores: findAllStores, totalPage: total });
+    const data = await firstLoadingCache('stores:*', storeModel, null);
+    if (data !== null) {
+      return res.status(200).json(data);
     } else {
-      return res.status(404).json({ message: 'Not found stores in database' });
+      const findAllStores = await storeModel
+        .find()
+        .skip((page - 1) * stores)
+        .limit(stores)
+        .lean();
+      return res.status(200).json(findAllStores !== null ? findAllStores : []);
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -35,6 +35,10 @@ export const createStore = async (req, res) => {
     } else {
       const newStore = new storeModel(store);
       const savedStore = await newStore.save();
+      await redisClient.set(
+        `stores:${savedStore._id}`,
+        JSON.stringify(savedStore)
+      );
       return res.status(200).json(savedStore);
     }
   } catch (error) {
@@ -48,12 +52,15 @@ export const updateStore = async (req, res) => {
   const { id } = req.params.id;
   const store = req.body;
   try {
-    const existingStore = await storeModel.findById(id);
-    if (existingStore) {
-      return res.status(404).json({ message: `Not found store by id: ${id}` });
+    const updatedStore = await storeModel.findByIdAndUpdate({ _id: id, store });
+    if (updatedStore) {
+      await redisClient.set(
+        `stores:${updateStore._id}`,
+        JSON.stringify(updatedStore)
+      );
+      return res.status(200).json({ message: 'Updated Successfully!' });
     } else {
-      const updatedStore = await storeModel.findById({ _id: id, store });
-      return res.status(200).json(updatedStore);
+      return res.status(404).json({ message: `Not found store by id: ${id}` });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -65,12 +72,12 @@ export const updateStore = async (req, res) => {
 export const deleteStore = async (req, res) => {
   const { id } = req.params.id;
   try {
-    const existingStore = await storeModel.findById(id);
-    if (existingStore) {
-      return res.status(404).json({ message: `Not found store by id: ${id}` });
+    const deletedStore = await storeModel.findByIdAndDelete(id);
+    if (deletedStore) {
+      await redisClient.del(`${deletedStore._id}`);
+      return res.status(200).json({ message: 'Deleted Successfully!' });
     } else {
-      const deletedStore = await storeModel.findByIdAndDelete(id);
-      return res.status(200).json(deletedStore);
+      return res.status(404).json({ message: `Not found store by id: ${id}` });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });

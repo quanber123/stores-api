@@ -10,72 +10,93 @@ import {
 import reviewsModel from '../../models/product/reviews.model.js';
 import { hidePartialUsername } from '../../utils/validate.js';
 import { totalPage } from '../../utils/totalPage.js';
-import { client } from '../../config/redis.js';
+import { esClient } from '../../config/elasticsearch.js';
+import { checkCache } from '../../modules/cache.js';
+import { redisClient } from '../../config/redis.js';
+import { docWithoutId } from '../../modules/elasticsearch.js';
 // Get all products
 export const getAllProducts = async (req, res) => {
   const { category, tag, sort, search, page } = req.query;
+  let queryAll = {
+    match_all: {},
+  };
+  let mQuery = {
+    bool: {
+      must: [],
+    },
+  };
+  let sortQuery = [{ created_at: 'desc' }];
+  let totalPage = 0;
+
   try {
-    let query = {};
-    let sortQuery = {};
-    const foundCategory = category
-      ? await categoryModel.findOne({ name: category })
-      : '';
-    const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
-    if (foundCategory !== '' || foundTag !== '') {
-      if (foundCategory !== '') {
-        query['details.category'] = foundCategory?._id;
-      }
-      if (foundTag !== '') {
-        query['details.tags'] = foundTag?._id;
-      }
-      if (foundCategory && foundTag) {
-        query = {
-          'details.category': foundCategory?._id,
-          'details.tags': foundTag?._id,
-        };
-      }
+    if (search) {
+      // const unaccentedQueryString = unidecode(search);
+      // regex = new RegExp(unaccentedQueryString, 'i');
+      mQuery.bool.must.push({ match: { name: search } });
+    }
+    let nestedConditions = [];
+    if (tag) {
+      nestedConditions.push({ match: { 'details.tags.name': tag } });
+    }
+    if (category) {
+      nestedConditions.push({ match: { 'details.category.name': category } });
     }
 
+    if (nestedConditions.length > 0) {
+      mQuery.bool.must.push({
+        nested: {
+          path: 'details',
+          query: {
+            bool: {
+              must: nestedConditions,
+            },
+          },
+        },
+      });
+    }
     switch (sort) {
       case '-date':
-        sortQuery = {
-          created_at: 1,
-        };
+        sortQuery = [{ created_at: 'asc' }];
         break;
       case 'date':
-        sortQuery = {
-          created_at: -1,
-        };
+        sortQuery = [{ created_at: 'desc' }];
         break;
       case '-price':
-        sortQuery = { price: 1 };
+        sortQuery = [{ price: 'asc' }];
         break;
       case 'price':
-        sortQuery = { price: -1 };
+        sortQuery = [{ price: 'desc' }];
         break;
       default:
         break;
     }
-    const totalProducts = await productModel.countDocuments(query);
-    const total = Math.ceil(totalProducts / 8);
-    const findAllProducts = await productModel
-      .find(query)
-      .sort(sortQuery)
-      .populate(['details.category', 'details.tags'])
-      .populate('sale')
-      .skip((page - 1) * 8)
-      .limit(8)
-      .lean();
-    if (findAllProducts) {
-      return res.status(200).json({
-        products: findAllProducts,
-        totalPage: total,
-        currentPage: page,
-      });
-    }
-    return res.status(404).json({ messages: 'Not found products in database' });
+
+    const finalQuery =
+      mQuery.bool.must[0]?.nested?.query?.bool?.must.length > 0 ||
+      search?.length > 0
+        ? mQuery
+        : queryAll;
+    const data = await esClient.search({
+      index: 'products',
+      body: {
+        sort: sortQuery,
+        query: finalQuery,
+        from: ((page || 1) - 1) * 8,
+        size: 8,
+        _source: true,
+        track_total_hits: true,
+      },
+    });
+
+    const totalProducts = data.hits.total.value;
+    totalPage = Math.ceil(totalProducts / 8);
+
+    return res.status(200).json({
+      products: data.hits.hits.flatMap((h) => [{ ...h._source, _id: h._id }]),
+      totalPage: totalPage,
+      currentPage: page,
+    });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -85,79 +106,77 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   const { id } = req.params;
   try {
-    const existingProduct = await productModel
-      .findById(id)
-      .populate(['details.category', 'details.tags']);
-    const relatedProducts = await productModel
-      .find({
-        'details.tags': { $in: [...existingProduct.details.tags] },
-        'details.category': existingProduct.details.category,
-        _id: { $ne: existingProduct._id },
-      })
-      .sort({ created_at: -1 })
-      .populate(['details.category', 'details.tags'])
-      .populate('sale')
-      .lean()
-      .limit(8);
-    // const calculateProduct = await calculateFinalPrice(existingProduct);
-    // const calculateProducts = await calculateFinalPricesForProducts(
-    //   relatedProducts
-    // );
-    await Promise.all([existingProduct, relatedProducts]).then(() => {
-      if (!existingProduct) {
-        return res.status(404).json({ message: `Not found by id ${id}` });
-      } else {
-        return res.status(200).json({
-          product: existingProduct,
-          relatedProducts: relatedProducts,
-        });
-      }
+    const product = await checkCache(`products:${id}`, async () => {
+      const data = await esClient.get({
+        index: 'products',
+        id: id,
+      });
+      await redisClient.set(
+        `products:${id}`,
+        JSON.stringify({ _id: data._id, ...data._source })
+      );
+      return { _id: data._id, ...data._source };
     });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
-// Search products
-
-export const searchProducts = async (req, res) => {
-  const { searchValue, products, page } = req.query;
-  try {
-    if (!searchValue || !products || !page) {
-      return res.status(400).json({ message: 'Missing search parameters' });
-    }
-    const searchRegex = new RegExp(searchValue, 'i');
-    const totalProducts = await productModel.countDocuments({
-      name: { $regex: searchRegex },
+    const relatedProducts = await esClient.search({
+      index: 'products',
+      body: {
+        sort: [{ created_at: 'desc' }],
+        query: {
+          bool: {
+            must: [
+              {
+                nested: {
+                  path: 'details',
+                  query: {
+                    bool: {
+                      must: [
+                        {
+                          match: {
+                            'details.category.name':
+                              product.details.category.name,
+                          },
+                        },
+                        {
+                          bool: {
+                            should: product.details.tags.map((t) => ({
+                              term: { 'details.tags.name': t.name },
+                            })),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+              {
+                bool: {
+                  must_not: [
+                    {
+                      term: { _id: id },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        size: 10,
+      },
     });
-
-    const total = Math.ceil(totalProducts / products);
-
-    const searchProducts = await productModel
-      .find({
-        name: { $regex: searchRegex },
-      })
-      .skip((page - 1) * products)
-      .populate('sale')
-      .limit(products)
-      .lean();
-    // const calculateFinalPricesForProducts =
-    //   await calculateFinalPricesForProducts(searchProducts);
-    if (!searchProducts) {
-      return res
-        .status(404)
-        .json({ message: `Not found results for ${searchValue}` });
+    if (!product) {
+      return res.status(404).json({ message: `Not found by id ${id}` });
     } else {
       return res.status(200).json({
-        products: searchProducts,
-        totalPage: total,
-        countProducts: searchProducts.length,
+        product: product,
+        relatedProducts: relatedProducts.hits.hits.flatMap((h) => [
+          { ...h._source, _id: h._id },
+        ]),
       });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-
 // Create Product
 
 export const createProduct = async (req, res) => {
@@ -185,6 +204,11 @@ export const createProduct = async (req, res) => {
         }
       });
       const updatedProduct = await existingProduct.save().lean();
+      await esClient.update({
+        index: 'products',
+        id: updatedProduct._id,
+        doc: docWithoutId(updatedProduct),
+      });
       return res.status(200).json({ product: updatedProduct });
     } else {
       const { variants } = product.details;
@@ -192,7 +216,14 @@ export const createProduct = async (req, res) => {
         variant.inStock = variant.quantity > 0 ? true : false;
       });
       const newProduct = new productModel(product);
-      const savedProduct = await newProduct.save().lean();
+      const savedProduct = await (await newProduct.save())
+        .populate(['details.category', 'details.tags', 'sale'])
+        .lean();
+      await esClient.index({
+        index: 'products',
+        id: savedProduct._id,
+        document: docWithoutId(savedProduct),
+      });
       return res.status(200).json({ product: savedProduct });
     }
   } catch (error) {
@@ -206,9 +237,20 @@ export const updateProduct = async (req, res) => {
   const id = req.params.id;
   const product = req.body;
   try {
-    const currProduct = await productModel.updateOne({ _id: id }, product);
+    const currProduct = await productModel
+      .updateOne({ _id: id }, product)
+      .populate(['details.category', 'details.tags', 'sale']);
     if (!currProduct)
       return res.stats(404).json({ message: 'Not found Product!' });
+    await esClient.update({
+      index: 'products',
+      id: currProduct._id,
+      doc: docWithoutId(currProduct),
+    });
+    await redisClient.set(
+      `products:${currProduct._id}`,
+      JSON.stringify(currProduct)
+    );
     return res
       .status(200)
       .json({ message: `Updated Successfully Product ${product}` });
@@ -227,12 +269,25 @@ export const deleteProduct = async (req, res) => {
   if (!id || !size || !color || !quantity)
     return res.status(400).json({ message: 'All Params are required!' });
   try {
-    const findProduct = await productModel.updateOne(
-      { _id: id },
-      { $pull: { 'details.variants': { size, color, quantity } } }
-    );
-    if (!findProduct)
+    const findProduct = await productModel
+      .updateOne(
+        { _id: id },
+        { $pull: { 'details.variants': { size, color, quantity } } }
+      )
+      .populate(['details.category', 'details.tags', 'sale']);
+    await esClient.update({
+      index: 'products',
+      id: findProduct._id,
+      doc: docWithoutId(findProduct),
+    });
+    await redisClient.del(`products:${findProduct._id}`);
+    if (!findProduct) {
+      await esClient.delete({
+        index: 'products',
+        id: id,
+      });
       return res.status(404).json({ message: `Not found product by id ${id}` });
+    }
     return res.stats(200).json({ message: `Delete Successfully!` });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -258,7 +313,7 @@ export const getReviews = async (req, res) => {
         },
       },
     ]);
-    const averageRating = Math.ceil(avgRate[0].avgRate * 10) / 10;
+    const averageRating = Math.ceil(avgRate[0]?.avgRate * 10) / 10;
     const getReviews = await reviewsModel
       .find({ productId: id })
       .sort({ created_at: -1 })

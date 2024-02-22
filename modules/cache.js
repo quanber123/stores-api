@@ -1,42 +1,50 @@
-import { client } from '../config/redis.js';
-export const DEFAULT_EXPIRATION = 1 * 60 * 60 * 24 * 30;
-export const checkCache = async (key, cb) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const data = await client.get(key);
-      if (data) {
-        return resolve(JSON.parse(data));
-      } else {
-        const freshData = await cb();
-        resolve(freshData);
-      }
-    } catch (error) {
-      reject(error);
-    }
-  });
+import { redisClient } from '../config/redis.js';
+export const firstLoadingCache = async (key, model, populate) => {
+  const reply = await redisClient.keys(key);
+  if (reply.length) {
+    // console.log(`${key} was cached!`);
+    const data = await Promise.all(
+      reply.map(async (item) => {
+        return JSON.parse(await redisClient.get(item));
+      })
+    );
+    return data;
+  } else {
+    // console.log(`${key} was not cached!`);
+    const dataFromMongo =
+      populate !== null
+        ? await model
+            .find()
+            .populate([...populate])
+            .lean()
+        : await model.find().lean();
+    const newCacheData = dataFromMongo.map(async (data) => {
+      await redisClient.set(
+        `${key.replace('*', `${data._id}`)}`,
+        JSON.stringify(data)
+      );
+    });
+    await Promise.all(newCacheData);
+    return null;
+  }
 };
-
+export const checkCache = async (key, cb) => {
+  const data = await redisClient.get(key);
+  if (data !== null) {
+    return JSON.parse(data);
+  } else {
+    const freshData = await cb();
+    return freshData;
+  }
+};
 export const updateCache = async (key, data) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const updateData = await JSON.parse(client.get(key));
-      if (data._id === updateData._id)
-        return resolve(client.setEx(key, DEFAULT_EXPIRATION, data));
-      return reject('Something went wrong!');
-    } catch (error) {
-      reject(error);
-    }
-  });
+  const dataCache = await redisClient.get(key);
+  if (data._id === JSON.parse(dataCache._id)) return redisClient.set(key, data);
+  return 'Something went wrong!';
 };
 
 export const deleteCache = async (key, data) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const deleteData = await JSON.parse(client.get(key));
-      if (data._id === deleteData._id) return resolve(client.del(key));
-      return reject('Something wen wrong!');
-    } catch (error) {
-      reject(error);
-    }
-  });
+  const dataCache = await redisClient.get(key);
+  if (data._id === JSON.parse(dataCache._id)) return redisClient.del(key);
+  return 'Something went wrong!';
 };

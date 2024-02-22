@@ -14,13 +14,10 @@ export const generateFakeProduct = async () => {
   const tags = await tagModel.find().lean();
   const stores = await storeModel.find().lean();
   const publishers = await publisherModel.find().lean();
-  // Generate random number of images (between 1 and 5)
   const numberOfImages = faker.number.int({ min: 1, max: 5 });
   const images = Array.from({ length: numberOfImages }, () =>
     faker.image.urlPicsumPhotos()
   );
-
-  // Generate random number of variants (between 1 and 3)
   const numberOfVariants = faker.number.int({ min: 1, max: 3 });
   const variants = Array.from({ length: numberOfVariants }, () => ({
     size: getRandomElements(sizes, 1)[0],

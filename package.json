@@ -19,6 +19,7 @@
   "homepage": "https://github.com/quanber123/project#readme",
   "type": "module",
   "dependencies": {
+    "@elastic/elasticsearch": "^8.12.1",
     "@faker-js/faker": "^8.3.1",
     "@payos/node": "^1.0.6",
     "@types/bcryptjs": "^2.4.4",

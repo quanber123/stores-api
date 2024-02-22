@@ -4,7 +4,7 @@ export const getFavoritesByProduct = async (req, res) => {
   const { id } = req.params;
   try {
     const result = await favoriteModel.count({ products: id });
-    return res.status(200).json(result);
+    return res.status(200).json({ totalLiked: result });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

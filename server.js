@@ -18,15 +18,35 @@ import routerBanner from './router/product/banner.router.js';
 import routerBlog from './router/blog/blog.router.js';
 import routerNotify from './router/user/notify.router.js';
 import { generateFakeBlog, generateFakeProduct } from './middleware/tools.js';
-import productModel from './models/product/product.model.js';
-import blogModel from './models/blog/blog.model.js';
 import routerSale from './router/product/sale.router.js';
 import routerCart from './router/product/cart.router.js';
 import routerPayment from './router/product/payment.router.js';
 import { connectRedis } from './config/redis.js';
+import { connectElasticSearch, esClient } from './config/elasticsearch.js';
+import { firstLoadingElasticSearch } from './modules/elasticsearch.js';
+import productModel from './models/product/product.model.js';
+import blogModel from './models/blog/blog.model.js';
+import categoryModel from './models/category/category.model.js';
+import tagModel from './models/tag/tag.model.js';
 config();
 connectRedis();
 connectDb();
+connectElasticSearch();
+firstLoadingElasticSearch(
+  ['products', 'blogs'],
+  [
+    {
+      type: 'products',
+      model: productModel,
+      populate: ['details.category', 'details.tags', 'sale'],
+    },
+    {
+      type: 'blogs',
+      model: blogModel,
+      populate: ['categories', 'tags'],
+    },
+  ]
+);
 const app = express();
 const port = process.env.PORT;
 app.use('/public', express.static('public'));
@@ -47,16 +67,18 @@ app.use(
     name: 'store-session',
   })
 );
-async function seedProductData() {
-  const PRODUCTS = await Promise.all(
-    Array.from({ length: 50 }, generateFakeProduct)
-  );
-  await productModel.create(PRODUCTS);
-}
-async function seedBlogData() {
-  const BLOGS = await Promise.all(Array.from({ length: 50 }, generateFakeBlog));
-  await blogModel.create(BLOGS);
-}
+// async function seedProductData() {
+//   const PRODUCTS = await Promise.all(
+//     Array.from({ length: 500 }, generateFakeProduct)
+//   );
+//   await productModel.create(PRODUCTS);
+// }
+// async function seedBlogData() {
+//   const BLOGS = await Promise.all(
+//     Array.from({ length: 500 }, generateFakeBlog)
+//   );
+//   await blogModel.create(BLOGS);
+// }
 // seedProductData()
 //   .then(() => {
 //     console.log('Data seeded successfully.');

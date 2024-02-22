@@ -1,31 +1,26 @@
 import {
-  DEFAULT_EXPIRATION,
-  checkCache,
+  firstLoadingCache,
   deleteCache,
   updateCache,
 } from '../../modules/cache.js';
 import categoryModel from '../../models/category/category.model.js';
-import { client } from '../../config/redis.js';
+import { redisClient } from '../../config/redis.js';
 // Get All Categories
 export const getAllCategories = async (req, res) => {
+  let categories;
   try {
-    const categories = await checkCache('categories:*', async () => {
-      const categoriesFromMongo = await categoryModel.find().lean();
-      if (categoriesFromMongo.length) {
-        const cachedData = categoriesFromMongo.map(async (item) => {
-          await client.setEx(
-            `${'categories:*'.replace('*', `${item._id}`)}`,
-            DEFAULT_EXPIRATION,
-            JSON.stringify(item)
-          );
-        });
-        await Promise.all(cachedData);
-      }
-      return categoriesFromMongo;
-    });
-    return res.status(200).json(categories);
+    const cachedCategories = await firstLoadingCache(
+      'categories:*',
+      categoryModel,
+      null
+    );
+    if (cachedCategories !== null) {
+      return res.status(200).json(cachedCategories);
+    } else {
+      categories = await categoryModel.find().lean();
+      return res.status(200).json(categories !== null ? categories : []);
+    }
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -47,7 +42,7 @@ export const createCategory = async (req, res) => {
     } else {
       const newCategory = new categoryModel(category);
       const savedCategory = await newCategory.save();
-      client.setEx(`categories:${savedCategory._id}`);
+      redisClient.setEx(`categories:${savedCategory._id}`);
       return res.status(200).json(savedCategory);
     }
   } catch (error) {

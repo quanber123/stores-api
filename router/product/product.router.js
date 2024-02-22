@@ -1,7 +1,6 @@
 import { Router, json } from 'express';
 import {
   getAllProducts,
-  searchProducts,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -17,7 +16,6 @@ routerProduct.use(json());
 routerProduct
   .route('/api/products')
   .get(getAllProducts)
-  .get(searchProducts)
   .post(uploadImg, createProduct);
 routerProduct
   .route(`/api/products/:id`)
