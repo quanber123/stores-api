@@ -28,6 +28,8 @@ import productModel from './models/product/product.model.js';
 import blogModel from './models/blog/blog.model.js';
 import categoryModel from './models/category/category.model.js';
 import tagModel from './models/tag/tag.model.js';
+import routerFigures from './router/product/figures.router.js';
+import serverless from 'serverless-http';
 config();
 connectRedis();
 connectDb();
@@ -108,6 +110,8 @@ app.use(routerNotify);
 app.use(routerCart);
 app.use(routerUser);
 app.use(routerPayment);
+app.use(routerFigures);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
+export const handler = serverless(app);

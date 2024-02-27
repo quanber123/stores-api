@@ -138,9 +138,15 @@ export const getProductById = async (req, res) => {
                         },
                         {
                           bool: {
-                            should: product.details.tags.map((t) => ({
-                              term: { 'details.tags.name': t.name },
-                            })),
+                            should: [
+                              {
+                                terms: {
+                                  'details.tags.name': product.details.tags.map(
+                                    (t) => t.name
+                                  ),
+                                },
+                              },
+                            ],
                           },
                         },
                       ],
@@ -163,6 +169,7 @@ export const getProductById = async (req, res) => {
         size: 10,
       },
     });
+    // console.log(relatedProducts);
     if (!product) {
       return res.status(404).json({ message: `Not found by id ${id}` });
     } else {

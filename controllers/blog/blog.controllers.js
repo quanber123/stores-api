@@ -1,10 +1,6 @@
-import authUserModel from '../../models/user/auth-user.model.js';
-import oauthUserModel from '../../models/user/oauth-user.model.js';
 import blogModel from '../../models/blog/blog.model.js';
-import categoryModel from '../../models/category/category.model.js';
-import tagModel from '../../models/tag/tag.model.js';
-import { firstLoadingCache } from '../../modules/cache.js';
 import { esClient } from '../../config/elasticsearch.js';
+import { docWithoutId } from '../../modules/elasticsearch.js';
 export const getAllBlogs = async (req, res) => {
   const { category, tag, page } = req.query;
   let queryAll = {
@@ -88,7 +84,6 @@ export const getBlogById = async (req, res) => {
       return res.status(200).json({ blog: { ...data._source, _id: data._id } });
     }
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };
@@ -100,7 +95,15 @@ export const createBlog = async (req, res) => {
     if (newBlog) {
       return res.status(404).json({ message: 'Blog already existed!' });
     } else {
-      await blogModel.create(blog);
+      const newBlog = new blogModel(blog);
+      const savedBlog = await (
+        await newBlog.save()
+      ).populate(['categories', 'tags']);
+      await esClient.index({
+        index: 'blogs',
+        id: savedBlog._id,
+        document: docWithoutId(savedBlog),
+      });
       return res.status(200).json({ message: 'Create Successfully!' });
     }
   } catch (error) {
@@ -109,24 +112,33 @@ export const createBlog = async (req, res) => {
 };
 export const postComment = async (req, res) => {
   const { id } = req.params;
-  const { userId, text } = req.body;
+  const { user } = req.decoded;
+  const { text } = req.body;
   try {
-    const authUser = await authUserModel.findById(userId);
-    const oauthUser = await oauthUserModel.findById(userId);
-    if (authUser || oauthUser) {
-      let comment = {
-        user: userId,
-        text,
-      };
-      const existedBlog = await blogModel.findById(id);
-      if (!existedBlog) {
-        return res.status(404).json({ message: 'Blog not exist!' });
-      }
-      existedBlog.comments.push(comment);
-      await existedBlog.save();
-      return res.status(201).json({ message: 'Post comment successfully!' });
-    }
-    return res.status(404).json({ message: 'Not Found User' });
+    let comment = {
+      user: user._id,
+      text,
+      created_at: new Date(),
+    };
+    await esClient.update({
+      index: 'blogs',
+      id: id,
+      body: {
+        script: {
+          source: 'ctx._source.comments.add(params.comment)',
+          params: {
+            comment: comment,
+          },
+        },
+      },
+      refresh: true,
+    });
+    const data = await esClient.get({
+      index: 'blogs',
+      id: id,
+    });
+    await blogModel.findByIdAndUpdate(id, data);
+    return res.status(201).json({ message: 'Post comment successfully!' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

@@ -10,6 +10,7 @@ import { allowedExtensions } from '../../config/allow.js';
 import notifyModel from '../../models/user/notify.model.js';
 import settingsModel from '../../models/user/settings.model.js';
 import { checkCache } from '../../modules/cache.js';
+import { redisClient } from '../../config/redis.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
@@ -258,8 +259,19 @@ export const updateAvatar = async (req, res) => {
 export const getAllSettings = async (req, res) => {
   const { id } = req.params;
   try {
-    const existedSettings = await settingsModel.findOne({ user: id });
-    if (!existedSettings)
+    const data = await checkCache(`settings:${id}`, async () => {
+      const existedSettings = await settingsModel.findOne({ user: id });
+      if (existedSettings) {
+        await redisClient.set(
+          `settings:${id}`,
+          JSON.stringify(existedSettings)
+        );
+        return existedSettings;
+      } else {
+        return null;
+      }
+    });
+    if (data !== null)
       return res.status(404).json({ message: `Not found by user id: ${id}` });
     return res.status(200).json({ settings: existedSettings });
   } catch (error) {
@@ -278,8 +290,10 @@ export const toggleNotifications = async (req, res) => {
         new: true,
       }
     );
-    if (updatedSettings)
+    if (updatedSettings) {
+      await redisClient.set(`settings:${id}`, JSON.stringify(updatedSettings));
       return res.status(200).json({ message: 'Updated Successfully!' });
+    }
     return res.status(404).json({ message: `Updated Failed!` });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error.' });

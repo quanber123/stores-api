@@ -76,6 +76,7 @@ const orderSchema = new mongoose.Schema({
     status: {
       type: String,
       default: null,
+      lowercase: true,
     },
     checkoutUrl: {
       type: String,

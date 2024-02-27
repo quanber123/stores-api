@@ -7,7 +7,6 @@ export const docWithoutId = (doc) => {
 export async function firstLoadingElasticSearch(arrType, arrModel) {
   try {
     let nonExisted = [];
-    let operations;
 
     for (let type of arrType) {
       const existedIndex = await esClient.indices.exists({
@@ -41,35 +40,35 @@ export async function firstLoadingElasticSearch(arrType, arrModel) {
           .populate([...model.populate])
           .lean();
         if (data) {
-          await Promise.all(
-            (operations = data.flatMap((doc) => {
+          const operations = await Promise.all(
+            data.flatMap((doc) => {
               return [
                 { index: { _index: model.type, _id: doc._id } },
                 docWithoutId(doc),
               ];
-            }))
+            })
           );
-        }
-      }
-      if (operations) {
-        const bulkResponse = await esClient.bulk({
-          refresh: true,
-          operations,
-        });
-        if (bulkResponse.errors) {
-          const erroredDocuments = [];
-          bulkResponse.items.forEach((action, i) => {
-            const operation = Object.keys(action)[0];
-            if (action[operation].error) {
-              erroredDocuments.push({
-                status: action[operation].status,
-                error: action[operation].error,
-                operation: operations[i * 2],
-                document: operations[i * 2 + 1],
+          if (operations) {
+            const bulkResponse = await esClient.bulk({
+              refresh: true,
+              operations,
+            });
+            if (bulkResponse.errors) {
+              const erroredDocuments = [];
+              bulkResponse.items.forEach((action, i) => {
+                const operation = Object.keys(action)[0];
+                if (action[operation].error) {
+                  erroredDocuments.push({
+                    status: action[operation].status,
+                    error: action[operation].error,
+                    operation: operations[i * 2],
+                    document: operations[i * 2 + 1],
+                  });
+                }
               });
+              console.log(erroredDocuments);
             }
-          });
-          console.log(erroredDocuments);
+          }
         }
       }
     }
