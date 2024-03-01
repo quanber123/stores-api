@@ -1,16 +1,15 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import path from 'path';
 import oauthUserModel from '../../models/user/oauth-user.model.js';
 import authUserModel from '../../models/user/auth-user.model.js';
 import { hashPassword } from '../../utils/hashInfo.js';
 import { generateVerificationCode } from '../../utils/generateVerificationCode.js';
 import { sendVerificationEmail } from '../../utils/sendVerificationEmail.js';
-import { allowedExtensions } from '../../config/allow.js';
 import notifyModel from '../../models/user/notify.model.js';
 import settingsModel from '../../models/user/settings.model.js';
 import { checkCache } from '../../modules/cache.js';
 import { redisClient } from '../../config/redis.js';
+import { optimizedImg } from '../../middleware/optimizedImg.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
@@ -222,6 +221,7 @@ export const updateProfile = async (req, res) => {
 export const updateAvatar = async (req, res) => {
   const { id } = req.params;
   const file = req.file;
+  let updateOptions;
   try {
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded!' });
@@ -233,15 +233,18 @@ export const updateAvatar = async (req, res) => {
     if (!existedAuthUser && !existedOauthUser) {
       return res.status(404).json({ message: `Not found user by id: ${id}` });
     }
-    const fileExtension = path.extname(req.file.originalname).toLowerCase();
-    if (!allowedExtensions.includes(fileExtension)) {
-      return res
-        .status(400)
-        .json({ message: 'Invalid file format. Only images are allowed.' });
+    const optimized = await optimizedImg(file, 100, 80);
+    if (optimized) {
+      updateOptions = {
+        $set: {
+          image: `http://localhost:3000/${optimized}`,
+        },
+      };
+    } else {
+      updateOptions = {
+        $set: { image: `http://localhost:3000/${file.path}` },
+      };
     }
-    const updateOptions = {
-      $set: { image: `http://localhost:3000/${file.path}` },
-    };
     if (existedAuthUser) {
       await authUserModel.findByIdAndUpdate(id, updateOptions);
     }
@@ -260,7 +263,7 @@ export const getAllSettings = async (req, res) => {
   const { id } = req.params;
   try {
     const data = await checkCache(`settings:${id}`, async () => {
-      const existedSettings = await settingsModel.findOne({ user: id });
+      const existedSettings = await settingsModel.findOne({ user: id }).lean();
       if (existedSettings) {
         await redisClient.set(
           `settings:${id}`,
@@ -271,9 +274,7 @@ export const getAllSettings = async (req, res) => {
         return null;
       }
     });
-    if (data !== null)
-      return res.status(404).json({ message: `Not found by user id: ${id}` });
-    return res.status(200).json({ settings: existedSettings });
+    return res.status(200).json({ settings: data !== null ? data : {} });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error.' });
   }

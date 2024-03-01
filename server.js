@@ -29,7 +29,6 @@ import blogModel from './models/blog/blog.model.js';
 import categoryModel from './models/category/category.model.js';
 import tagModel from './models/tag/tag.model.js';
 import routerFigures from './router/product/figures.router.js';
-import serverless from 'serverless-http';
 config();
 connectRedis();
 connectDb();
@@ -114,4 +113,3 @@ app.use(routerFigures);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
-export const handler = serverless(app);
