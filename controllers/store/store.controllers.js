@@ -74,11 +74,10 @@ export const deleteStore = async (req, res) => {
   try {
     const deletedStore = await storeModel.findByIdAndDelete(id);
     if (deletedStore) {
-      await redisClient.del(`${deletedStore._id}`);
+      await redisClient.del(`stores:${deletedStore._id}`);
       return res.status(200).json({ message: 'Deleted Successfully!' });
-    } else {
-      return res.status(404).json({ message: `Not found store by id: ${id}` });
     }
+    return res.status(404).json({ message: `Not found store by id: ${id}` });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

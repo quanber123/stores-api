@@ -5,6 +5,8 @@ const statusOrderSchema = new mongoose.Schema({
     type: String,
     lowercase: true,
   },
+  number: Number,
   color: String,
+  backgroundColor: String,
 });
 export default mongoose.model('StatusOrder', statusOrderSchema);
