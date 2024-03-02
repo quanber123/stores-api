@@ -1,5 +1,5 @@
 import { redisClient } from '../../config/redis.js';
-import storeModel from '../../models/product/store.model.js';
+import storeModel from '../../models/store/store.model.js';
 import { firstLoadingCache } from '../../modules/cache.js';
 
 // Get All Store

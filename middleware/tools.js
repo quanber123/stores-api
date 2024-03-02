@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import categoryModel from '../models/category/category.model.js';
 import tagModel from '../models/tag/tag.model.js';
-import storeModel from '../models/product/store.model.js';
-import publisherModel from '../models/product/publisher.model.js';
+import storeModel from '../models/store/store.model.js';
+import publisherModel from '../models/publisher/publisher.model.js';
 const getRandomElements = (array, numberOfElements) => {
   const shuffledArray = [...array].sort(() => 0.5 - Math.random());
   return shuffledArray.slice(0, numberOfElements);

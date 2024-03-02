@@ -1,12 +1,12 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import oauthUserModel from '../../../models/user/oauth-user.model.js';
-import authUserModel from '../../../models/user/auth-user.model.js';
+import oauthUserModel from '../../../models/auth/users/oauth-user.model.js';
+import authUserModel from '../../../models/auth/users/auth-user.model.js';
 import { hashPassword } from '../../../utils/hashInfo.js';
 import { generateVerificationCode } from '../../../utils/generateVerificationCode.js';
 import { sendVerificationEmail } from '../../../utils/sendVerificationEmail.js';
-import notifyModel from '../../../models/user/notify.model.js';
-import settingsModel from '../../../models/user/settings.model.js';
+import notifyModel from '../../../models/auth/users/notify.model.js';
+import settingsModel from '../../../models/auth/users/settings.model.js';
 import { checkCache } from '../../../modules/cache.js';
 import { redisClient } from '../../../config/redis.js';
 import { optimizedImg } from '../../../middleware/optimizedImg.js';

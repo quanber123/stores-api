@@ -2,9 +2,9 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { config } from 'dotenv';
-import userModel from '../models/user/oauth-user.model.js';
-import notifyModel from '../models/user/notify.model.js';
-import settingsModel from '../models/user/settings.model.js';
+import oauthUserModel from '../models/auth/users/oauth-user.model.js';
+import notifyModel from '../models/auth/users/notify.model.js';
+import settingsModel from '../models/auth/users/settings.model.js';
 config();
 const google_client_id = process.env.GOOGLE_CLIENT_ID;
 const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
@@ -22,10 +22,12 @@ passport.use(
     async function (accessToken, refreshToken, profile, done) {
       const { displayName, emails, photos, provider } = profile;
       try {
-        const existedUser = await userModel.findOne({ email: emails[0].value });
+        const existedUser = await oauthUserModel.findOne({
+          email: emails[0].value,
+        });
         if (!existedUser) {
           const allSettingsNotify = await notifyModel.find().lean();
-          const newUser = new userModel({
+          const newUser = new oauthUserModel({
             username: emails[0].value,
             name: displayName,
             image: photos[0].value,
@@ -57,9 +59,11 @@ passport.use(
     async function (accessToken, refreshToken, profile, done) {
       const { displayName, emails, photos, provider } = profile;
       try {
-        const existedUser = await userModel.findOne({ email: emails[0].value });
+        const existedUser = await oauthUserModel.findOne({
+          email: emails[0].value,
+        });
         if (!existedUser) {
-          const newUser = new userModel({
+          const newUser = new oauthUserModel({
             username: emails[0].value,
             name: displayName,
             image: photos[0].value,

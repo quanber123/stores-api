@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import favoriteModel from '../../models/user/favorite.model.js';
+import favoriteModel from '../../models/auth/users/favorite.model.js';
 export const getFavoritesByProduct = async (req, res) => {
   const { id } = req.params;
   try {

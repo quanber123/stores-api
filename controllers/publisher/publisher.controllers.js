@@ -1,4 +1,4 @@
-import publisherModel from '../../models/product/publisher.model.js';
+import publisherModel from '../../models/publisher/publisher.model.js';
 
 // Get All Publishers
 

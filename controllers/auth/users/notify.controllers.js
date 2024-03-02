@@ -1,5 +1,5 @@
-import notifyModel from '../../../models/user/notify.model.js';
-import settingsModel from '../../../models/user/settings.model.js';
+import notifyModel from '../../../models/auth/users/notify.model.js';
+import settingsModel from '../../../models/auth/users/settings.model.js';
 
 export const getAllNotifications = async (req, res) => {
   try {
