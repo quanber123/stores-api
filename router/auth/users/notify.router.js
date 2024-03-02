@@ -1,11 +1,11 @@
 import { Router, json } from 'express';
-import { auth } from '../../middleware/auth.js';
+import { auth } from '../../../middleware/auth.js';
 import {
   createNotify,
   deleteNotify,
   getAllNotifications,
   updateNotify,
-} from '../../controllers/user/notify.controllers.js';
+} from '../../../controllers/auth/users/notify.controllers.js';
 const routerNotify = Router();
 routerNotify.use(json());
 routerNotify

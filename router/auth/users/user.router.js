@@ -8,20 +8,20 @@ import {
   userLogin,
   userRegister,
   verifiedAccount,
-} from '../../controllers/user/user.controllers.js';
-import { auth } from '../../middleware/auth.js';
+} from '../../../controllers/auth/users/user.controllers.js';
+import { auth } from '../../../middleware/auth.js';
 import { Router, json } from 'express';
-import { uploadImg } from '../../middleware/uploadImg.js';
+import { uploadImg } from '../../../middleware/uploadImg.js';
 import {
   createAddress,
   deleteAddress,
   getAllAddress,
   updateAddress,
-} from '../../controllers/user/address.controllers.js';
+} from '../../../controllers/auth/users/address.controllers.js';
 import {
   getAllFavorites,
   postFavorites,
-} from '../../controllers/product/favorite.controllers.js';
+} from '../../../controllers/product/favorite.controllers.js';
 const routerUser = Router();
 routerUser.use(json());
 routerUser.route('/api/auth/verify-email').post(verifiedAccount);

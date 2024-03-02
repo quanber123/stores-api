@@ -2,9 +2,9 @@ import {
   firstLoadingCache,
   deleteCache,
   updateCache,
-} from '../../modules/cache.js';
-import categoryModel from '../../models/category/category.model.js';
-import { redisClient } from '../../config/redis.js';
+} from '../../../modules/cache.js';
+import categoryModel from '../../../models/category/category.model.js';
+import { redisClient } from '../../../config/redis.js';
 // Get All Categories
 export const getAllCategories = async (req, res) => {
   let categories;

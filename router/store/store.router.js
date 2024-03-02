@@ -4,7 +4,7 @@ import {
   createStore,
   updateStore,
   deleteStore,
-} from '../../controllers/product/store.controllers.js';
+} from '../../controllers/store/store.controllers.js';
 import { auth } from '../../middleware/auth.js';
 const routerStore = Router();
 routerStore.use(json());

@@ -5,7 +5,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
-} from '../../controllers/category/category.controllers.js';
+} from '../../controllers/label/category/category.controllers.js';
 const routerCategory = Router();
 routerCategory.use(json());
 routerCategory

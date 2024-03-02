@@ -6,7 +6,7 @@ import {
   deleteCartById,
   getAllCarts,
   updateCart,
-} from '../../controllers/product/cart.controllers.js';
+} from '../../controllers/cart/cart.controllers.js';
 const routerCart = Router();
 routerCart.use(json());
 routerCart

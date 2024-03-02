@@ -2,7 +2,7 @@ import unidecode from 'unidecode';
 import productModel from '../../models/product/product.model.js';
 import categoryModel from '../../models/category/category.model.js';
 import tagModel from '../../models/tag/tag.model.js';
-import orderModel from '../../models/product/order.model.js';
+import orderModel from '../../models/order/order.model.js';
 import {
   calculateFinalPrice,
   calculateFinalPricesForProducts,
@@ -30,8 +30,6 @@ export const getAllProducts = async (req, res) => {
 
   try {
     if (search) {
-      // const unaccentedQueryString = unidecode(search);
-      // regex = new RegExp(unaccentedQueryString, 'i');
       mQuery.bool.must.push({ match: { name: search } });
     }
     let nestedConditions = [];

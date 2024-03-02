@@ -1,4 +1,4 @@
-import cartModel from '../../models/product/cart.model.js';
+import cartModel from '../../models/cart/cart.model.js';
 // import { totalPage } from '../../utils/totalPage.js';
 
 export const getAllCarts = async (req, res) => {

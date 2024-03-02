@@ -5,7 +5,7 @@ import {
   createTag,
   updateTag,
   deleteTag,
-} from '../..//controllers/tag/tag.controllers.js';
+} from '../../controllers/label/tag/tag.controllers.js';
 const routerTag = Router();
 routerTag.use(json());
 routerTag.route('/api/tags').get(getAllTags).post(createTag);

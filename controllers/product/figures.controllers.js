@@ -1,4 +1,4 @@
-import orderModel from '../../models/product/order.model.js';
+import orderModel from '../../models/order/order.model.js';
 
 export const getTotalAmount = async (req, res) => {
   try {

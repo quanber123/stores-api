@@ -1,11 +1,11 @@
 import { json } from 'express';
-import { redisClient } from '../../config/redis.js';
-import tagModel from '../../models/tag/tag.model.js';
+import { redisClient } from '../../../config/redis.js';
+import tagModel from '../../../models/tag/tag.model.js';
 import {
   deleteCache,
   firstLoadingCache,
   updateCache,
-} from '../../modules/cache.js';
+} from '../../../modules/cache.js';
 // Get All Tags
 
 export const getAllTags = async (req, res) => {

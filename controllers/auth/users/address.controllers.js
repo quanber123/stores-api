@@ -1,4 +1,4 @@
-import addressModel from '../../models/user/address.model.js';
+import addressModel from '../../../models/user/address.model.js';
 
 export const getAllAddress = async (req, res) => {
   const { user } = req.decoded;

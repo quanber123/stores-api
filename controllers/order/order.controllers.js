@@ -1,5 +1,5 @@
-import cartModel from '../../models/product/cart.model.js';
-import orderModel from '../../models/product/order.model.js';
+import cartModel from '../../models/cart/cart.model.js';
+import orderModel from '../../models/order/order.model.js';
 import productModel from '../../models/product/product.model.js';
 import { payOs } from '../../utils/payos.js';
 

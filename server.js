@@ -8,22 +8,22 @@ import uid from 'uid-safe';
 import cors from 'cors';
 import corsOptions from './config/cors.js';
 import routerProduct from './router/product/product.router.js';
-import routerStore from './router/product/store.router.js';
-import routerPublisher from './router/product/publisher.router.js';
+import routerStore from './router/store/store.router.js';
+import routerPublisher from './router/publisher/publisher.router.js';
 import routerTag from './router/tag/tag.router.js';
 import routerCategory from './router/category/category.router.js';
-import routerUser from './router/user/user.router.js';
-import routerAuth from './router/user/auth.router.js';
+import routerUser from './router/auth/users/user.router.js';
+import routerAuth from './router/auth/users/auth.router.js';
 import routerBanner from './router/product/banner.router.js';
 import routerBlog from './router/blog/blog.router.js';
-import routerNotify from './router/user/notify.router.js';
+import routerNotify from './router/auth/users/notify.router.js';
 import { generateFakeBlog, generateFakeProduct } from './middleware/tools.js';
 import routerSale from './router/product/sale.router.js';
-import routerCart from './router/product/cart.router.js';
-import routerPayment from './router/product/payment.router.js';
+import routerCart from './router/cart/cart.router.js';
+import routerPayment from './router/order/order.router.js';
 import { connectRedis } from './config/redis.js';
 import { connectElasticSearch, esClient } from './config/elasticsearch.js';
-import { firstLoadingElasticSearch } from './modules/elasticsearch.js';
+// import { firstLoadingElasticSearch } from './modules/elasticsearch.js';
 import productModel from './models/product/product.model.js';
 import blogModel from './models/blog/blog.model.js';
 import categoryModel from './models/category/category.model.js';
@@ -33,21 +33,21 @@ config();
 connectRedis();
 connectDb();
 connectElasticSearch();
-firstLoadingElasticSearch(
-  ['products', 'blogs'],
-  [
-    {
-      type: 'products',
-      model: productModel,
-      populate: ['details.category', 'details.tags', 'sale'],
-    },
-    {
-      type: 'blogs',
-      model: blogModel,
-      populate: ['categories', 'tags'],
-    },
-  ]
-);
+// firstLoadingElasticSearch(
+//   ['products', 'blogs'],
+//   [
+//     {
+//       type: 'products',
+//       model: productModel,
+//       populate: ['details.category', 'details.tags', 'sale'],
+//     },
+//     {
+//       type: 'blogs',
+//       model: blogModel,
+//       populate: ['categories', 'tags'],
+//     },
+//   ]
+// );
 const app = express();
 const port = process.env.PORT;
 app.use('/public', express.static('public'));

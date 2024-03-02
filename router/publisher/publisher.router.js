@@ -5,7 +5,7 @@ import {
   deletePublisher,
   getAllPublishers,
   updatePublisher,
-} from '../../controllers/product/publisher.controllers.js';
+} from '../../controllers/publisher/publisher.controllers.js';
 const routerPublisher = Router();
 routerPublisher.use(json());
 routerPublisher
