@@ -141,7 +141,7 @@ export const updateOrder = async (req, res) => {
       },
       { new: true }
     );
-    if (status === 'PAID') {
+    if (status === 'delivered') {
       const updatedProducts = updatedOrder.paymentInfo.products.map(
         async (p) =>
           await productModel.findOneAndUpdate(
