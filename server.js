@@ -33,7 +33,7 @@ import routerStatusOrder from './router/order/status.order.router.js';
 config();
 connectRedis();
 connectDb();
-connectElasticSearch();
+//connectElasticSearch();
 // firstLoadingElasticSearch(
 //   ['products', 'blogs'],
 //   [
@@ -81,20 +81,20 @@ async function seedBlogData() {
   );
   await blogModel.create(BLOGS);
 }
-seedProductData()
-  .then(() => {
-    console.log('Data seeded successfully.');
-  })
-  .catch((error) => {
-    console.error('Error seeding data:', error.message);
-  });
-seedBlogData()
-  .then(() => {
-    console.log('Data seeded successfully.');
-  })
-  .catch((error) => {
-    console.error('Error seeding data:', error.message);
-  });
+// seedProductData()
+//   .then(() => {
+//     console.log('Data seeded successfully.');
+//   })
+//   .catch((error) => {
+//     console.error('Error seeding data:', error.message);
+//   });
+// seedBlogData()
+//   .then(() => {
+//     console.log('Data seeded successfully.');
+//   })
+//   .catch((error) => {
+//     console.error('Error seeding data:', error.message);
+//   });
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(routerAuth);
