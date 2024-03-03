@@ -69,32 +69,32 @@ app.use(
     name: 'store-session',
   })
 );
-// async function seedProductData() {
-//   const PRODUCTS = await Promise.all(
-//     Array.from({ length: 500 }, generateFakeProduct)
-//   );
-//   await productModel.create(PRODUCTS);
-// }
-// async function seedBlogData() {
-//   const BLOGS = await Promise.all(
-//     Array.from({ length: 500 }, generateFakeBlog)
-//   );
-//   await blogModel.create(BLOGS);
-// }
-// seedProductData()
-//   .then(() => {
-//     console.log('Data seeded successfully.');
-//   })
-//   .catch((error) => {
-//     console.error('Error seeding data:', error.message);
-//   });
-// seedBlogData()
-//   .then(() => {
-//     console.log('Data seeded successfully.');
-//   })
-//   .catch((error) => {
-//     console.error('Error seeding data:', error.message);
-//   });
+async function seedProductData() {
+  const PRODUCTS = await Promise.all(
+    Array.from({ length: 500 }, generateFakeProduct)
+  );
+  await productModel.create(PRODUCTS);
+}
+async function seedBlogData() {
+  const BLOGS = await Promise.all(
+    Array.from({ length: 500 }, generateFakeBlog)
+  );
+  await blogModel.create(BLOGS);
+}
+seedProductData()
+  .then(() => {
+    console.log('Data seeded successfully.');
+  })
+  .catch((error) => {
+    console.error('Error seeding data:', error.message);
+  });
+seedBlogData()
+  .then(() => {
+    console.log('Data seeded successfully.');
+  })
+  .catch((error) => {
+    console.error('Error seeding data:', error.message);
+  });
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(routerAuth);
