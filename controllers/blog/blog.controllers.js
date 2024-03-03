@@ -37,15 +37,11 @@ export const getAllBlogsCallback = async (req, res) => {
       .skip((page - 1) * 8)
       .limit(8)
       .lean();
-    if (findAllBlogs) {
-      return res.status(200).json({
-        blogs: findAllBlogs,
-        totalPage: total,
-        currentPage: Number(page),
-      });
-    } else {
-      return res.status(404).json({ messages: 'Not found blogs in database' });
-    }
+    return res.status(200).json({
+      blogs: findAllBlogs ? findAllBlogs : [],
+      totalPage: total ? total : 0,
+      currentPage: Number(page),
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

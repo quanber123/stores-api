@@ -70,14 +70,11 @@ export const getAllProductCallback = async (req, res) => {
       .skip((page - 1) * 8)
       .limit(8)
       .lean();
-    if (findAllProducts) {
-      return res.status(200).json({
-        products: findAllProducts,
-        totalPage: total,
-        currentPage: page,
-      });
-    }
-    return res.status(404).json({ messages: 'Not found products in database' });
+    return res.status(200).json({
+      products: findAllProducts ? findAllProducts : [],
+      totalPage: total ? total : 0,
+      currentPage: page,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: 'Internal Server Error' });
