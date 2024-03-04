@@ -168,9 +168,12 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   const { id } = req.params;
   try {
-    const existingProduct = await productModel
-      .findById(id)
-      .populate(['details.category', 'details.tags']);
+    const data = checkCache(`products:${id}`, async () => {
+      const product = await productModel
+        .findById(id)
+        .populate(['details.category', 'details.tags']);
+      await redisClient.set(`products:${product._id}`, JSON.stringify(product));
+    });
     const relatedProducts = await productModel
       .find({
         'details.tags': { $in: [...existingProduct.details.tags] },
@@ -183,12 +186,12 @@ export const getProductById = async (req, res) => {
       .lean()
       .limit(8);
 
-    await Promise.all([existingProduct, relatedProducts]).then(() => {
-      if (!existingProduct) {
+    await Promise.all([data, relatedProducts]).then(() => {
+      if (!data) {
         return res.status(404).json({ message: `Not found by id ${id}` });
       } else {
         return res.status(200).json({
-          product: existingProduct,
+          product: data,
           relatedProducts: relatedProducts,
         });
       }
