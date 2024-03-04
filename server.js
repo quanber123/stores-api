@@ -30,6 +30,7 @@ import categoryModel from './models/category/category.model.js';
 import tagModel from './models/tag/tag.model.js';
 import routerFigures from './router/product/figures.router.js';
 import routerStatusOrder from './router/order/status.order.router.js';
+import routerCountry from './router/country/country.router.js';
 config();
 connectRedis();
 connectDb();
@@ -112,6 +113,7 @@ app.use(routerUser);
 app.use(routerPayment);
 app.use(routerFigures);
 app.use(routerStatusOrder);
+app.use(routerCountry);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
