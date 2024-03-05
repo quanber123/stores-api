@@ -18,18 +18,19 @@ passport.use(
       callbackURL: `${process.env.APP_URL}/api/auth/google/callback`,
     },
     async function (accessToken, refreshToken, profile, done) {
-      const { displayName, emails, photos, provider } = profile;
+      const { id, displayName, emails, photos, provider } = profile;
       try {
         const existedUser = await oauthUserModel.findOne({
-          email: emails[0].value,
+          id: id,
         });
         if (!existedUser) {
           const allSettingsNotify = await notifyModel.find().lean();
           const newUser = new oauthUserModel({
-            username: emails[0].value,
+            id: id,
+            username: emails[0]?.value || null,
             name: displayName,
             image: photos[0].value,
-            email: emails[0].value,
+            email: emails[0]?.value || null,
             oauthProvider: provider,
           });
           await newUser.save();
@@ -53,20 +54,23 @@ passport.use(
       clientID: facebook_client_id,
       clientSecret: facebook_client_secret,
       callbackURL: `${process.env.APP_URL}/api/auth/facebook/callback`,
+      profileFields: ['id', 'displayName', 'name', 'gender', 'photos'],
       // enableProof: true,
     },
     async function (accessToken, refreshToken, profile, done) {
-      const { displayName, emails, photos, provider } = profile;
+      const { id, displayName, photos, provider, username } = profile;
       try {
         const existedUser = await oauthUserModel.findOne({
-          email: emails[0].value,
+          id: id,
         });
         if (!existedUser) {
+          const allSettingsNotify = await notifyModel.find().lean();
           const newUser = new oauthUserModel({
-            username: emails[0].value,
+            id: id,
+            username: username || null,
             name: displayName,
             image: photos[0].value,
-            email: emails[0].value,
+            email: null,
             oauthProvider: provider,
           });
           await newUser.save();

@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 const authUserSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+  },
   created_at: {
     type: Date,
     default: () => new Date(),
@@ -15,7 +19,7 @@ const authUserSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    default: 'http://localhost:3000/public/avatar-trang.jpg',
+    default: `${process.env.APP_URL}/public/avatar-trang.jpg`,
   },
   isVerified: {
     type: Boolean,

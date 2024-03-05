@@ -35,12 +35,10 @@ const blogSchema = new mongoose.Schema({
   comments: [
     {
       user: {
-        type: mongoose.Schema.Types.ObjectId,
+        id: String,
+        image: String,
+        name: String,
       },
-      // onUserType: {
-      //   type: String,
-      //   enum: ['AuthUser', 'OauthUser'],
-      // },
       text: String,
       created_at: {
         type: Date,

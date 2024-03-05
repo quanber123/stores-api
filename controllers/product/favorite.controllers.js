@@ -15,9 +15,9 @@ export const getAllFavorites = async (req, res) => {
   try {
     // const skip = offset - 10;
     // const limit = 10;
-    const total = await favoriteModel.countDocuments({ userId: user._id });
+    const total = await favoriteModel.countDocuments({ userId: user.id });
     const getFavorites = await favoriteModel
-      .findOne({ userId: user._id })
+      .findOne({ userId: user.id })
       .populate({
         path: 'products',
         select: 'images name _id',
@@ -34,11 +34,11 @@ export const postFavorites = async (req, res) => {
   const { productId } = req.body;
 
   try {
-    const existedFavorites = await favoriteModel.findOne({ userId: user._id });
+    const existedFavorites = await favoriteModel.findOne({ userId: user.id });
 
     if (!existedFavorites) {
       await favoriteModel.create({
-        userId: user._id,
+        userId: user.id,
         products: [productId],
       });
     } else {
@@ -46,12 +46,12 @@ export const postFavorites = async (req, res) => {
 
       if (existingProducts.includes(productId)) {
         await favoriteModel.updateOne(
-          { userId: user._id },
+          { userId: user.id },
           { $pull: { products: productId } }
         );
       } else {
         await favoriteModel.updateOne(
-          { userId: user._id },
+          { userId: user.id },
           { $push: { products: productId } }
         );
       }

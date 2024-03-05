@@ -1,12 +1,12 @@
+import { redisClient } from '../../../config/redis.js';
 import notifyModel from '../../../models/auth/users/notify.model.js';
 import settingsModel from '../../../models/auth/users/settings.model.js';
+import { firstLoadingCache } from '../../../modules/cache.js';
 
 export const getAllNotifications = async (req, res) => {
   try {
-    const existedNotifications = await notifyModel.find().lean();
-    if (!existedNotifications)
-      return res.status(404).json({ message: 'Not found notifications!' });
-    return res.status(200).json({ notifications: existedNotifications });
+    const data = await firstLoadingCache(`notifications:*`, notifyModel, []);
+    return res.status(200).json({ notifications: data !== null ? data : [] });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -27,6 +27,7 @@ export const createNotify = async (req, res) => {
       type: type,
       description: description,
     });
+    await redisClient.set(`notifications:${newNotify._id}`);
     const updatedSettings = await settingsModel.updateMany(
       { user: { $exists: true } },
       {
@@ -60,8 +61,10 @@ export const updateNotify = async (req, res) => {
       },
       { new: true }
     );
-    if (updateNotify)
+    if (updateNotify) {
+      await redisClient.set(`notifications:${updateNotify._id}`);
       return res.status(200).json({ message: 'Updated Successfully!' });
+    }
     return res
       .status(404)
       .json({ message: `Notify name ${description} not existed!` });

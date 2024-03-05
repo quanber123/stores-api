@@ -15,12 +15,12 @@ import { optimizedImg } from '../../../middleware/optimizedImg.js';
 export const getUserByToken = async (req, res) => {
   const { user } = req.decoded;
   try {
-    const getUser = await checkCache(`users:${user.email}`, async () => {
-      const existedOauthUser = user.email
-        ? await oauthUserModel.findOne({ email: user.email }).lean()
+    const getUser = await checkCache(`users:${user.id}`, async () => {
+      const existedOauthUser = user.id
+        ? await oauthUserModel.findOne({ id: user.id }).lean()
         : null;
       const existedAuthUser = user.email
-        ? await authUserModel.findOne({ email: user.email }).lean()
+        ? await authUserModel.findOne({ id: user.id }).lean()
         : null;
       const [oauthUserResult, authUserResult] = await Promise.all([
         existedOauthUser,
@@ -29,6 +29,7 @@ export const getUserByToken = async (req, res) => {
       return {
         user: {
           _id: oauthUserResult?._id || authUserResult?._id,
+          id: oauthUserResult?.id || authUserResult?.id,
           email: oauthUserResult?.email || authUserResult?.email,
           name: oauthUserResult?.name || authUserResult?.name,
           image: oauthUserResult?.image || authUserResult?.image,
@@ -61,6 +62,7 @@ export const userLogin = async (req, res) => {
     if (match) {
       const user = {
         _id: findUser._id,
+        id: findUser.id,
         name: findUser.name,
         email: findUser.email,
         password: findUser.password,
@@ -97,6 +99,7 @@ export const userRegister = async (req, res) => {
     const hashedPassword = await hashPassword(password);
     const verificationCode = generateVerificationCode();
     const user = new authUserModel({
+      id: new Date().getTime(),
       name: name,
       email: email,
       password: hashedPassword,
@@ -106,9 +109,7 @@ export const userRegister = async (req, res) => {
     await user.save();
     const token = jwt.sign(
       {
-        user: {
-          email: user.email,
-        },
+        user: user,
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.DEFAULT_EXPIRATION }
@@ -142,11 +143,12 @@ export const verifiedAccount = async (req, res) => {
       user.isVerified = true;
       await user.save();
       await settingsModel.create({
-        user: user._id,
+        user: user.id,
         notifications: [...allSettingsNotify],
       });
       const responseUser = {
         _id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         image: user.image,
@@ -199,18 +201,18 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ message: `${name} is required!` });
     }
     const [existedAuthUser, existedOauthUser] = await Promise.all([
-      authUserModel.findById(id).lean(),
-      oauthUserModel.findById(id).lean(),
+      authUserModel.findOne({ id: id }).lean(),
+      oauthUserModel.findOne({ id: id }).lean(),
     ]);
     if (!existedAuthUser && !existedOauthUser) {
       return res.status(404).json({ message: `Not found user by id: ${id}` });
     }
     const updateOptions = { $set: { [name]: value } };
     if (existedAuthUser) {
-      await authUserModel.findByIdAndUpdate(id, updateOptions);
+      await authUserModel.findOneAndUpdate({ id: id }, updateOptions);
     }
     if (existedOauthUser) {
-      await oauthUserModel.findByIdAndUpdate(id, updateOptions);
+      await oauthUserModel.findOneAndUpdate({ id: id }, updateOptions);
     }
     return res.status(200).json({ message: `${name} updated successfully.` });
   } catch (error) {
@@ -227,8 +229,8 @@ export const updateAvatar = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded!' });
     }
     const [existedAuthUser, existedOauthUser] = await Promise.all([
-      authUserModel.findById(id).lean(),
-      oauthUserModel.findById(id).lean(),
+      authUserModel.findOne({ id: id }).lean(),
+      oauthUserModel.findOne({ id: id }).lean(),
     ]);
     if (!existedAuthUser && !existedOauthUser) {
       return res.status(404).json({ message: `Not found user by id: ${id}` });
@@ -237,20 +239,20 @@ export const updateAvatar = async (req, res) => {
     if (optimized) {
       updateOptions = {
         $set: {
-          image: `http://localhost:3000/${optimized}`,
+          image: `${process.env.APP_URL}/${optimized}`,
         },
       };
     } else {
       updateOptions = {
-        $set: { image: `http://localhost:3000/${file.path}` },
+        $set: { image: `${process.env.APP_URL}/${file.path}` },
       };
     }
     if (existedAuthUser) {
-      await authUserModel.findByIdAndUpdate(id, updateOptions);
+      await authUserModel.findOneAndUpdate({ id: id }, updateOptions);
     }
 
     if (existedOauthUser) {
-      await oauthUserModel.findByIdAndUpdate(id, updateOptions);
+      await oauthUserModel.findOneAndUpdate({ id: id }, updateOptions);
     }
 
     return res.status(200).json({ message: 'Image updated successfully.' });

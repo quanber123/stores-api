@@ -17,7 +17,7 @@ export const createTransferLink = async (req, res) => {
     };
     const paymentLinkResponse = await payOs.createPaymentLink(body);
     await orderModel.create({
-      user: user._id,
+      user: user.id,
       paymentMethod: 'transfer',
       paymentInfo: {
         products: products.map((p) => p.product),
@@ -50,7 +50,7 @@ export const createCashPayment = async (req, res) => {
   const { products, totalPrice, message, address } = req.body;
   try {
     const order = await orderModel.create({
-      user: user._id,
+      user: user.id,
       paymentMethod: 'cash',
       paymentInfo: {
         products: products.map((p) => p.product),
@@ -86,12 +86,12 @@ export const getAllOrders = async (req, res) => {
   try {
     if (status) {
       query = {
-        user: user._id,
+        user: user.id,
         'paymentInfo.status': status,
       };
     } else {
       query = {
-        user: user._id,
+        user: user.id,
       };
     }
     const totalOrders = await orderModel.countDocuments(query);
@@ -116,7 +116,7 @@ export const getOrderById = async (req, res) => {
     const orderTransfer = await payOs.getPaymentLinkInformation(orderId);
     const orderCash = await orderModel
       .findOne({
-        user: user._id,
+        user: user.id,
         'paymentInfo.orderCode': orderId,
       })
       .lean();
@@ -148,7 +148,7 @@ export const updateOrder = async (req, res) => {
     const { status } = req.body;
     const updatedOrder = await orderModel.findOneAndUpdate(
       {
-        user: user._id,
+        user: user.id,
         'paymentInfo.orderCode': Number(orderId),
       },
       {

@@ -4,7 +4,7 @@ export const getAllAddress = async (req, res) => {
   const { user } = req.decoded;
   try {
     const address = await addressModel
-      .find({ userId: user._id })
+      .find({ userId: user.id })
       .sort({ isDefault: -1 });
     if (address) return res.status(200).json(address);
     return res.status(404).json({ message: 'Not found addresses!' });
@@ -26,7 +26,7 @@ export const createAddress = async (req, res) => {
       });
     }
     const userAddress = {
-      userId: user._id,
+      userId: user.id,
       name: name,
       phone: phone,
       state: state,
@@ -58,7 +58,7 @@ export const updateAddress = async (req, res) => {
         .status(400)
         .json({ message: 'state, city, district, address are required!' });
     const userAddress = {
-      userId: user._id,
+      userId: user.id,
       name: name,
       phone: phone,
       district: district,

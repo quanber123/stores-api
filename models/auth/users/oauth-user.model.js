@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 const oauthUserSchema = new mongoose.Schema({
+  id: String,
   created_at: {
     type: Date,
     default: () => Date.now(),
@@ -9,7 +10,7 @@ const oauthUserSchema = new mongoose.Schema({
   image: String,
   email: {
     type: String,
-    unique: true,
+    default: null,
   },
   isVerified: {
     type: Boolean,
