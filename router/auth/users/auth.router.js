@@ -36,7 +36,7 @@ routerAuth.get(
 );
 routerAuth.get(
   `/api/auth/facebook`,
-  passport.authenticate('facebook', { scope: ['profile', 'email'] })
+  passport.authenticate('facebook', { scope: ['public_profile', 'email'] })
 );
 routerAuth.get(
   `/api/auth/facebook/callback`,
