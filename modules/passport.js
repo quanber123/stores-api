@@ -17,7 +17,7 @@ passport.use(
     {
       clientID: google_client_id,
       clientSecret: google_client_secret,
-      callbackURL: '/api/auth/google/callback',
+      callbackURL: `${process.env.APP_URL}/api/auth/google/callback`,
     },
     async function (accessToken, refreshToken, profile, done) {
       const { displayName, emails, photos, provider } = profile;
@@ -54,7 +54,7 @@ passport.use(
     {
       clientID: facebook_client_id,
       clientSecret: facebook_client_secret,
-      callbackURL: '/api/auth/facebook/callback',
+      callbackURL: `${process.env.APP_URL}/api/auth/facebook/callback`,
     },
     async function (accessToken, refreshToken, profile, done) {
       const { displayName, emails, photos, provider } = profile;
