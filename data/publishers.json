@@ -1,0 +1,30 @@
+[{
+  "_id": {
+    "$oid": "654a714bc31e7682019316ae"
+  },
+  "name": "publisher 1",
+  "location": "Hà Nội",
+  "phone": 334115449,
+  "email": "quantm103@gmail.com",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "654a7152c31e7682019316b1"
+  },
+  "name": "publisher 2",
+  "location": "Hà Nội",
+  "phone": 334115449,
+  "email": "quantm103@gmail.com",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "654a7155c31e7682019316b4"
+  },
+  "name": "publisher 3",
+  "location": "Hà Nội",
+  "phone": 334115449,
+  "email": "quantm103@gmail.com",
+  "__v": 0
+}]

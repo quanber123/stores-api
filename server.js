@@ -28,7 +28,7 @@ import productModel from './models/product/product.model.js';
 import blogModel from './models/blog/blog.model.js';
 import categoryModel from './models/category/category.model.js';
 import tagModel from './models/tag/tag.model.js';
-import routerFigures from './router/product/figures.router.js';
+import routerFigures from './router/order/figures.router.js';
 import routerStatusOrder from './router/order/status.order.router.js';
 import routerCountry from './router/country/country.router.js';
 config();

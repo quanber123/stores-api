@@ -14,6 +14,7 @@ export const getTotalAmount = async (req, res) => {
             $gte: new Date(today.setHours(0, 0, 0, 0)),
             $lt: new Date(today.setHours(23, 59, 59, 999)),
           },
+          'paymentInfo.status': 'delivered',
         },
       },
       {
@@ -22,7 +23,8 @@ export const getTotalAmount = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalAmount: { $sum: '$paymentInfo.products.finalPrice' },
+          totalAmount: { $sum: '$paymentInfo.totalPrice' },
+          currency: { $first: '$paymentInfo.currency' },
         },
       },
     ]);
@@ -33,6 +35,7 @@ export const getTotalAmount = async (req, res) => {
             $gte: new Date(yesterday.setHours(0, 0, 0, 0)),
             $lt: new Date(yesterday.setHours(23, 59, 59, 999)),
           },
+          'paymentInfo.status': 'delivered',
         },
       },
       {
@@ -41,7 +44,8 @@ export const getTotalAmount = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalAmount: { $sum: '$paymentInfo.products.finalPrice' },
+          totalAmount: { $sum: '$paymentInfo.totalPrice' },
+          currency: { $first: '$paymentInfo.currency' },
         },
       },
     ]);
@@ -49,6 +53,7 @@ export const getTotalAmount = async (req, res) => {
       {
         $match: {
           updated_at: { $gte: firstDayOfMonth, $lt: today },
+          'paymentInfo.status': 'delivered',
         },
       },
       {
@@ -57,7 +62,8 @@ export const getTotalAmount = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalAmount: { $sum: '$paymentInfo.products.finalPrice' },
+          totalAmount: { $sum: '$paymentInfo.totalPrice' },
+          currency: { $first: '$paymentInfo.currency' },
         },
       },
     ]);
@@ -65,6 +71,7 @@ export const getTotalAmount = async (req, res) => {
       {
         $match: {
           updated_at: { $gte: lastMonth, $lt: firstDayOfMonth },
+          'paymentInfo.status': 'delivered',
         },
       },
       {
@@ -73,22 +80,48 @@ export const getTotalAmount = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalAmount: { $sum: '$paymentInfo.products.finalPrice' },
+          totalAmount: { $sum: '$paymentInfo.totalPrice' },
+          currency: { $first: '$paymentInfo.currency' },
         },
       },
     ]);
-    const [amountToday, amountYesterday, amountThisMonth, amountLastMonth] =
-      await Promise.all([
-        todayFigures,
-        yesterdayFigures,
-        thisMonthFigures,
-        lastMonthFigures,
-      ]);
+    const allSaleTimes = await orderModel.aggregate([
+      {
+        $match: {
+          'paymentInfo.status': 'delivered',
+          'paymentInfo.totalSalePrice': { $gt: 0 },
+        },
+      },
+      {
+        $unwind: '$paymentInfo.products',
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: '$paymentInfo.totalSalePrice' },
+          currency: { $first: '$paymentInfo.currency' },
+        },
+      },
+    ]);
+    const [
+      amountToday,
+      amountYesterday,
+      amountThisMonth,
+      amountLastMonth,
+      amountAllSalesTime,
+    ] = await Promise.all([
+      todayFigures,
+      yesterdayFigures,
+      thisMonthFigures,
+      lastMonthFigures,
+      allSaleTimes,
+    ]);
     return res.status(200).json({
       amountToday: amountToday,
       amountYesterday: amountYesterday,
       amountThisMonth: amountThisMonth,
       amountLastMonth: amountLastMonth,
+      amountAllSalesTime: amountAllSalesTime,
     });
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error' });

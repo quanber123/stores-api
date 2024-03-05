@@ -24,6 +24,14 @@ export const createTransferLink = async (req, res) => {
         ...paymentLinkResponse,
         message: message,
         address: address,
+        totalPrice: products.reduce(
+          (accumulator, p) => p.product.totalPrice + accumulator,
+          0
+        ),
+        totalSalePrice: products.reduce(
+          (accumulator, p) => p.product.amountSalePrice + accumulator,
+          0
+        ),
       },
     });
     const updatedCarts = products.map(
@@ -51,6 +59,14 @@ export const createCashPayment = async (req, res) => {
         status: 'PENDING',
         message: message,
         address: address,
+        totalPrice: products.reduce(
+          (accumulator, p) => p.product.totalPrice + accumulator,
+          0
+        ),
+        totalSalePrice: products.reduce(
+          (accumulator, p) => p.product.amountSalePrice + accumulator,
+          0
+        ),
       },
     });
     const updatedCarts = products.map(

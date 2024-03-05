@@ -168,17 +168,18 @@ export const getAllProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   const { id } = req.params;
   try {
-    const data = checkCache(`products:${id}`, async () => {
+    const data = await checkCache(`products:${id}`, async () => {
       const product = await productModel
         .findById(id)
         .populate(['details.category', 'details.tags']);
       await redisClient.set(`products:${product._id}`, JSON.stringify(product));
+      return product;
     });
     const relatedProducts = await productModel
       .find({
-        'details.tags': { $in: [...existingProduct.details.tags] },
-        'details.category': existingProduct.details.category,
-        _id: { $ne: existingProduct._id },
+        'details.tags': { $in: [...data.details.tags] },
+        'details.category': data.details.category,
+        _id: { $ne: data._id },
       })
       .sort({ created_at: -1 })
       .populate(['details.category', 'details.tags'])
@@ -186,16 +187,14 @@ export const getProductById = async (req, res) => {
       .lean()
       .limit(8);
 
-    await Promise.all([data, relatedProducts]).then(() => {
-      if (!data) {
-        return res.status(404).json({ message: `Not found by id ${id}` });
-      } else {
-        return res.status(200).json({
-          product: data,
-          relatedProducts: relatedProducts,
-        });
-      }
-    });
+    if (!data) {
+      return res.status(404).json({ message: `Not found by id ${id}` });
+    } else {
+      return res.status(200).json({
+        product: data,
+        relatedProducts: relatedProducts,
+      });
+    }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

@@ -1,0 +1,40 @@
+[{
+  "_id": {
+    "$oid": "65e2ef99793916ac64dfa295"
+  },
+  "name": "pending",
+  "color": "#ffffff",
+  "backgroundColor": "#ca8a04",
+  "__v": 0,
+  "number": 1
+},
+{
+  "_id": {
+    "$oid": "65e2efc8793916ac64dfa298"
+  },
+  "name": "delivered",
+  "color": "#d1fae5",
+  "backgroundColor": "#065f46",
+  "__v": 0,
+  "number": 3
+},
+{
+  "_id": {
+    "$oid": "65e2efe9793916ac64dfa29b"
+  },
+  "name": "cancel",
+  "color": "#fee2e2",
+  "backgroundColor": "#991b1b",
+  "__v": 0,
+  "number": 4
+},
+{
+  "_id": {
+    "$oid": "65e2f018793916ac64dfa29e"
+  },
+  "name": "processing",
+  "color": "#ffffff",
+  "backgroundColor": "#1e40af",
+  "__v": 0,
+  "number": 2
+}]
