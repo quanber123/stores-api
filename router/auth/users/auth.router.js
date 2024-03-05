@@ -41,10 +41,14 @@ routerAuth.get(
 routerAuth.get(
   `/api/auth/facebook/callback`,
   passport.authenticate('facebook', {
-    successRedirect: client_url,
-    failureRedirect: '/login/failed',
-    session: true,
-    expiresIn: '60m',
-  })
+    session: false,
+  }),
+  (req, res) => {
+    const { user } = req;
+    const token = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: `90d`,
+    });
+    res.redirect(`${client_url}?token=${token}`);
+  }
 );
 export default routerAuth;

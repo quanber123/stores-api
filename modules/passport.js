@@ -8,8 +8,6 @@ import settingsModel from '../models/auth/users/settings.model.js';
 config();
 const google_client_id = process.env.GOOGLE_CLIENT_ID;
 const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
-// console.log(google_client_id);
-// console.log(google_client_secret);
 const facebook_client_id = process.env.FACEBOOK_CLIENT_ID;
 const facebook_client_secret = process.env.FACEBOOK_CLIENT_SECRET;
 passport.use(
@@ -55,6 +53,7 @@ passport.use(
       clientID: facebook_client_id,
       clientSecret: facebook_client_secret,
       callbackURL: `${process.env.APP_URL}/api/auth/facebook/callback`,
+      // enableProof: true,
     },
     async function (accessToken, refreshToken, profile, done) {
       const { displayName, emails, photos, provider } = profile;
