@@ -10,11 +10,7 @@ export const getAllStores = async (req, res) => {
     if (data !== null) {
       return res.status(200).json(data);
     } else {
-      const findAllStores = await storeModel
-        .find()
-        .skip((page - 1) * stores)
-        .limit(stores)
-        .lean();
+      const findAllStores = await storeModel.find().lean();
       return res.status(200).json(findAllStores !== null ? findAllStores : []);
     }
   } catch (error) {
@@ -52,7 +48,7 @@ export const updateStore = async (req, res) => {
   const { id } = req.params.id;
   const store = req.body;
   try {
-    const updatedStore = await storeModel.findByIdAndUpdate({ _id: id, store });
+    const updatedStore = await storeModel.findByIdAndUpdate(id, store);
     if (updatedStore) {
       await redisClient.set(
         `stores:${updateStore._id}`,

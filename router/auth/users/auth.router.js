@@ -1,9 +1,11 @@
 import { Router, json } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
+import { createContact } from '../../../controllers/auth/users/contact.controllers.js';
 const routerAuth = Router();
 const client_url = process.env.CLIENT_URL;
 routerAuth.use(json());
+routerAuth.post('/api/contact', createContact);
 routerAuth.get(`/api/auth/login/failed`, (req, res) => {
   res.status(401).json({ success: false, message: 'failure' });
 });

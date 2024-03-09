@@ -156,3 +156,43 @@ export const getTotalFigures = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+function getStartOfWeek(date) {
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  return startOfWeek;
+}
+
+function getEndOfWeek(date) {
+  const endOfWeek = new Date(date);
+  endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
+  endOfWeek.setHours(23, 59, 59, 999);
+  return endOfWeek;
+}
+
+export const getWeeklySales = async (req, res) => {
+  const startDate = getStartOfWeek(new Date());
+  const endDate = getEndOfWeek(new Date());
+  const data = await orderModel.aggregate([
+    {
+      $match: {
+        updated_at: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+        totalSalePrice: {
+          $gt: 1,
+        },
+        status: 'delivered',
+      },
+    },
+    {
+      $group: {
+        _id: { $dayOfWeek: '$updated_at' },
+        totalValue: { $sum: '$totalSalePrice' },
+      },
+    },
+  ]);
+  return res.status(200).json(data);
+};

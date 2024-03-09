@@ -33,6 +33,10 @@ const adminSchema = new mongoose.Schema({
     type: Date,
     default: () => Date.now(),
   },
+  default: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 export default mongoose.model('Admin', adminSchema);

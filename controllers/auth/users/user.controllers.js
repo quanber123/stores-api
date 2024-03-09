@@ -4,7 +4,7 @@ import oauthUserModel from '../../../models/auth/users/oauth-user.model.js';
 import authUserModel from '../../../models/auth/users/auth-user.model.js';
 import { hashPassword } from '../../../utils/hashInfo.js';
 import { generateVerificationCode } from '../../../utils/generateVerificationCode.js';
-import { sendVerificationEmail } from '../../../utils/sendVerificationEmail.js';
+import { sendVerificationEmail } from '../../../utils/sendEmail.js';
 import notifyModel from '../../../models/auth/users/notify.model.js';
 import settingsModel from '../../../models/auth/users/settings.model.js';
 import { checkCache } from '../../../modules/cache.js';
@@ -114,7 +114,7 @@ export const userRegister = async (req, res) => {
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: process.env.DEFAULT_EXPIRATION }
     );
-    sendVerificationEmail(email, verificationCode);
+    await sendVerificationEmail(email, verificationCode);
 
     return res.status(201).json({
       message: 'Please check your email to verified account!',
@@ -186,7 +186,7 @@ export const sendCodeVerifiedAccount = async (req, res) => {
       email: email,
       verificationCode: verificationCode,
     });
-    sendVerificationEmail(email, verificationCode);
+    await sendVerificationEmail(email, verificationCode);
     return res
       .status(200)
       .json({ message: 'Please check email to verified your account!' });
