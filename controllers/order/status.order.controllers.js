@@ -6,12 +6,13 @@ export const getAllStatusOrder = async (req, res) => {
     const data = await firstLoadingCache(
       'statusorders:*',
       statusOrderModel,
-      null
+      null,
+      { number: 1 }
     );
     if (data !== null) {
       return res.status(200).json(data);
     } else {
-      const getData = await statusOrderModel.find().sort({ number: 1 });
+      const getData = await statusOrderModel.find().sort({ number: 1 }).lean();
       return res.status(200).json(getData !== null ? getData : []);
     }
   } catch (error) {
