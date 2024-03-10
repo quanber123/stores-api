@@ -112,23 +112,25 @@ export const getAllOrders = async (req, res) => {
 export const getOrderById = async (req, res) => {
   const { user } = req.decoded;
   const { orderId } = req.params;
+  const { payment } = req.query;
+  let order;
   try {
-    const orderTransfer = await payOs.getPaymentLinkInformation(orderId);
-    const orderCash = await orderModel
-      .findOne({
-        user: user.id,
-        'paymentInfo.orderCode': orderId,
-      })
-      .lean();
-    const [orderTransferResult, orderCashResult] = await Promise.all([
-      orderTransfer,
-      orderCash,
-    ]);
-    if (orderTransferResult || orderCashResult) {
+    if (!payment) return res.status(400).json({ message: 'Bad Request!' });
+    if (payment === 'transfer') {
+      order = await payOs.getPaymentLinkInformation(orderId);
+    } else {
+      order = await orderModel
+        .findOne({
+          user: user.id,
+          'paymentInfo.orderCode': orderId,
+        })
+        .lean();
+    }
+    if (order) {
       return res.json({
         error: 0,
         message: 'ok',
-        data: orderTransferResult || orderCashResult.paymentInfo,
+        data: order,
       });
     }
     return res.json({
@@ -171,7 +173,7 @@ export const updateOrder = async (req, res) => {
             }
           )
       );
-      Promise.all(updatedProducts);
+      await Promise.all(updatedProducts);
     }
     if (updatedOrder && updatedOrder.paymentMethod === 'transfer') {
       await payOs.cancelPaymentLink(orderId, status.cancellationReason);
