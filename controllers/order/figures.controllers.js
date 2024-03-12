@@ -1,5 +1,5 @@
 import orderModel from '../../models/order/order.model.js';
-
+import { format } from 'date-fns';
 export const getTotalAmount = async (req, res) => {
   try {
     const today = new Date();
@@ -10,7 +10,7 @@ export const getTotalAmount = async (req, res) => {
     const todayFigures = await orderModel.aggregate([
       {
         $match: {
-          updated_at: {
+          created_at: {
             $gte: new Date(today.setHours(0, 0, 0, 0)),
             $lt: new Date(today.setHours(23, 59, 59, 999)),
           },
@@ -31,7 +31,7 @@ export const getTotalAmount = async (req, res) => {
     const yesterdayFigures = await orderModel.aggregate([
       {
         $match: {
-          updated_at: {
+          created_at: {
             $gte: new Date(yesterday.setHours(0, 0, 0, 0)),
             $lt: new Date(yesterday.setHours(23, 59, 59, 999)),
           },
@@ -52,7 +52,7 @@ export const getTotalAmount = async (req, res) => {
     const thisMonthFigures = await orderModel.aggregate([
       {
         $match: {
-          updated_at: { $gte: firstDayOfMonth, $lt: today },
+          created_at: { $gte: firstDayOfMonth, $lt: today },
           'paymentInfo.status': 'delivered',
         },
       },
@@ -70,7 +70,7 @@ export const getTotalAmount = async (req, res) => {
     const lastMonthFigures = await orderModel.aggregate([
       {
         $match: {
-          updated_at: { $gte: lastMonth, $lt: firstDayOfMonth },
+          created_at: { $gte: lastMonth, $lt: firstDayOfMonth },
           'paymentInfo.status': 'delivered',
         },
       },
@@ -89,7 +89,9 @@ export const getTotalAmount = async (req, res) => {
       {
         $match: {
           'paymentInfo.status': 'delivered',
-          'paymentInfo.totalSalePrice': { $gt: 0 },
+          totalSalePrice: {
+            $gt: 1,
+          },
         },
       },
       {
@@ -157,42 +159,127 @@ export const getTotalFigures = async (req, res) => {
   }
 };
 
-function getStartOfWeek(date) {
-  const startOfWeek = new Date(date);
-  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
-  return startOfWeek;
-}
+// function getStartOfWeek(date) {
+//   const startOfWeek = new Date(date);
+//   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+//   startOfWeek.setHours(0, 0, 0, 0);
+//   return startOfWeek;
+// }
 
-function getEndOfWeek(date) {
-  const endOfWeek = new Date(date);
-  endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
-  endOfWeek.setHours(23, 59, 59, 999);
-  return endOfWeek;
-}
+// function getEndOfWeek(date) {
+//   const endOfWeek = new Date(date);
+//   endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
+//   endOfWeek.setHours(23, 59, 59, 999);
+//   return endOfWeek;
+// }
+const getFiguresWeekly = (startDate, endDate, data) => {
+  const result = [];
+  const allDates = data.reduce((acc, order) => {
+    const index = acc.findIndex((item) => item._id === order._id);
+    if (index !== -1) {
+      acc[index].total += order.total;
+    } else {
+      acc.push(order);
+    }
+    return acc;
+  }, []);
+  for (
+    let date = new Date(startDate);
+    date <= endDate;
+    date.setDate(date.getDate() + 1)
+  ) {
+    const index = allDates.findIndex(
+      (item) => item._id === format(new Date(date), 'yyyy-MM-dd')
+    );
+    result.push({
+      _id: format(new Date(date), 'yyyy-MM-dd'),
+      total: index !== -1 ? allDates[index].total : 0,
+    });
+  }
+  return result;
+};
+export const getWeeklyFigures = async (req, res) => {
+  const endDate = new Date();
+  endDate.setHours(23, 59, 59, 999);
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - 6);
+  try {
+    const totalSales = await orderModel.aggregate([
+      {
+        $match: {
+          created_at: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+          totalSalePrice: {
+            $gt: 1,
+          },
+          'paymentInfo.status': 'delivered',
+        },
+      },
+      {
+        $unwind: '$paymentInfo.products',
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$created_at' } },
+          total: { $sum: '$totalSalePrice' },
+        },
+      },
+    ]);
+    const totalOrders = await orderModel.aggregate([
+      {
+        $match: {
+          created_at: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+          'paymentInfo.status': 'delivered',
+        },
+      },
+      {
+        $unwind: {
+          path: '$paymentInfo.products',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$created_at' } },
+          total: { $sum: 1 },
+        },
+      },
+    ]);
 
-export const getWeeklySales = async (req, res) => {
-  const startDate = getStartOfWeek(new Date());
-  const endDate = getEndOfWeek(new Date());
-  const data = await orderModel.aggregate([
-    {
-      $match: {
-        updated_at: {
-          $gte: startDate,
-          $lte: endDate,
+    return res.status(200).json({
+      totalSales: getFiguresWeekly(startDate, endDate, totalSales),
+      totalOrders: getFiguresWeekly(startDate, endDate, totalOrders),
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getBestSellingProducts = async (req, res) => {
+  try {
+    const data = await orderModel.aggregate([
+      {
+        $match: {
+          'paymentInfo.status': 'delivered',
         },
-        totalSalePrice: {
-          $gt: 1,
+      },
+      {
+        $unwind: '$paymentInfo.products',
+      },
+      {
+        $group: {
+          _id: '$paymentInfo.products.category',
+          total: { $sum: '$paymentInfo.products.quantity' },
         },
-        status: 'delivered',
       },
-    },
-    {
-      $group: {
-        _id: { $dayOfWeek: '$updated_at' },
-        totalValue: { $sum: '$totalSalePrice' },
-      },
-    },
-  ]);
-  return res.status(200).json(data);
+    ]);
+    return res.status(200).json(data ? data : []);
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 };

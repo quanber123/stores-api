@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
 const settingsSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.SchemaTypes.ObjectId,
-  },
+  user: String,
   created_at: {
     type: Date,
     default: () => Date.now(),

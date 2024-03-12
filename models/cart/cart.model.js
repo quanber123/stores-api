@@ -12,6 +12,7 @@ const cartSchema = new mongoose.Schema({
       lowercase: true,
       required: true,
     },
+    category: String,
     image: {
       type: String,
       require: true,

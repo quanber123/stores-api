@@ -35,7 +35,7 @@ passport.use(
           });
           await newUser.save();
           await settingsModel.create({
-            user: newUser._id,
+            user: newUser.id,
             notifications: [...allSettingsNotify],
           });
           return done(null, newUser);
@@ -75,7 +75,7 @@ passport.use(
           });
           await newUser.save();
           await settingsModel.create({
-            user: newUser._id,
+            user: newUser.id,
             notifications: [...allSettingsNotify],
           });
           return done(null, newUser);
