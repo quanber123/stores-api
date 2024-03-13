@@ -1,3 +1,5 @@
+import authUserModel from '../../models/auth/users/auth-user.model.js';
+import oauthUserModel from '../../models/auth/users/oauth-user.model.js';
 import orderModel from '../../models/order/order.model.js';
 import { format } from 'date-fns';
 export const getTotalAmount = async (req, res) => {
@@ -281,5 +283,99 @@ export const getBestSellingProducts = async (req, res) => {
     return res.status(200).json(data ? data : []);
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAllOrders = async (req, res) => {
+  const { page, customer, status, order_limits, method, date } = req.query;
+  let query = {};
+  try {
+    if (customer) {
+      if (search) {
+        const unaccentedQueryString = unidecode(search);
+        const regex = new RegExp(unaccentedQueryString, 'i');
+        query['paymentInfo.user_name'] = { $regex: regex };
+      }
+    }
+    if (date) {
+      let startDate = new Date(date);
+      currDate.setHours(0, 0, 0, 0);
+      let endDate = new Date(date);
+      endDate.setHours(23, 59, 59, 999);
+      query = {
+        created_at: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      };
+    }
+    if (status) {
+      query['paymentInfo.status'] = status;
+    }
+    if (order_limits) {
+      let startDay = new Date();
+      startDay.setHours(0, 0, 0, 0);
+      let endDay = new Date();
+      endDay.setHours(23, 59, 59, 999);
+      startDay.setDate(date.getDate() - parseInt(order_limits));
+      endDay.setDate(date.getDate() - parseInt(order_limits));
+      query.created_at = {
+        $gte: startDay,
+        $lte: endDay,
+      };
+    }
+    if (method) {
+      query.paymentMethod = method;
+    }
+    const totalOrders = await orderModel.countDocuments(query);
+    const totalPage = Math.ceil(totalOrders / 10);
+    const data = await orderModel
+      .find(query)
+      .sort({ created_at: -1 })
+      .skip((page - 1) * 10)
+      .limit(10);
+    return res
+      .status(200)
+      .json({ orders: data !== null ? data : [], totalPage: totalPage });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getAllCustomers = async (req, res) => {
+  try {
+    const { page, search, type } = req.query;
+    let query = {};
+    let data;
+    let total;
+    if (search) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+    if (type.toLowerCase() === 'auth') {
+      const totalUsers = await authUserModel.countDocuments(query);
+      data = await authUserModel
+        .find(query)
+        .skip((Number(page) - 1) * 10)
+        .limit(10);
+      total = Math.ceil(totalUsers / 10);
+    }
+    if (type.toLowerCase() === 'oauth') {
+      const totalUsers = await oauthUserModel.countDocuments(query);
+      data = await oauthUserModel
+        .find(query)
+        .skip((Number(page) - 1) * 10)
+        .limit(10);
+      total = Math.ceil(totalUsers / 10);
+    }
+    return res
+      .status(200)
+      .json({ users: data !== null ? data : [], totalPage: total });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };

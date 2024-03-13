@@ -22,8 +22,10 @@ import {
   getAllFavorites,
   postFavorites,
 } from '../../../controllers/product/favorite.controllers.js';
+import { getAllCustomers } from '../../../controllers/order/figures.controllers.js';
 const routerUser = Router();
 routerUser.use(json());
+routerUser.route('/api/users/getAll').get(getAllCustomers);
 routerUser.route('/api/auth/verify-email').post(verifiedAccount);
 routerUser.route('/api/auth/send-code-email').post(sendCodeVerifiedAccount);
 routerUser.route('/api/auth/register').post(userRegister);

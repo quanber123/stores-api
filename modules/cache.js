@@ -1,6 +1,5 @@
 import { redisClient } from '../config/redis.js';
 export const firstLoadingCache = async (key, model, populate, sort) => {
-  console.log(sort);
   const reply = await redisClient.keys(key);
   if (reply.length) {
     // console.log(`${key} was cached!`);

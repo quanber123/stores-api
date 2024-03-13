@@ -3,8 +3,8 @@ import { auth } from '../../middleware/auth.js';
 import {
   createCashPayment,
   createTransferLink,
-  getAllOrders,
-  getOrderById,
+  getAllOrdersUser,
+  getOrdersUserById,
   updateOrder,
 } from '../../controllers/order/order.controllers.js';
 const routerOrder = Router();
@@ -13,7 +13,7 @@ routerOrder
   .route('/api/create-payment-transfer')
   .post(auth, createTransferLink);
 routerOrder.route('/api/create-payment-cash').post(auth, createCashPayment);
-routerOrder.route('/api/orders').get(auth, getAllOrders);
-routerOrder.route('/api/orders/:orderId').get(auth, getOrderById);
-routerOrder.route('/api/orders/:orderId').put(auth, updateOrder);
+routerOrder.route('/api/user_orders').get(auth, getAllOrdersUser);
+routerOrder.route('/api/user_orders/:orderId').get(auth, getOrdersUserById);
+routerOrder.route('/api/user_orders/:orderId').put(updateOrder);
 export default routerOrder;

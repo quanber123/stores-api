@@ -1,5 +1,6 @@
 import { Router, json } from 'express';
 import {
+  getAllOrders,
   getBestSellingProducts,
   getTotalAmount,
   getTotalFigures,
@@ -11,4 +12,5 @@ routerFigures.route('/api/figures_count').get(getTotalFigures);
 routerFigures.route('/api/figures_amount').get(getTotalAmount);
 routerFigures.route('/api/weekly_figures').get(getWeeklyFigures);
 routerFigures.route('/api/best_selling').get(getBestSellingProducts);
+routerFigures.route('/api/orders').get(getAllOrders);
 export default routerFigures;

@@ -6,7 +6,7 @@ import { payOs } from '../../utils/payos.js';
 export const createTransferLink = async (req, res) => {
   const { user } = req.decoded;
   const client_url = process.env.CLIENT_URL;
-  const { products, totalPrice, message, address } = req.body;
+  const { user_name, phone, message, address, products, totalPrice } = req.body;
   try {
     const body = {
       orderCode: Number(String(Date.now()).slice(-6)),
@@ -20,10 +20,12 @@ export const createTransferLink = async (req, res) => {
       user: user.id,
       paymentMethod: 'transfer',
       paymentInfo: {
-        products: products.map((p) => p.product),
-        ...paymentLinkResponse,
+        user_name: user_name,
+        phone: phone,
         message: message,
         address: address,
+        products: products.map((p) => p.product),
+        ...paymentLinkResponse,
         totalPrice: products.reduce(
           (accumulator, p) => p.product.totalPrice + accumulator,
           0
@@ -47,18 +49,20 @@ export const createTransferLink = async (req, res) => {
 
 export const createCashPayment = async (req, res) => {
   const { user } = req.decoded;
-  const { products, totalPrice, message, address } = req.body;
+  const { user_name, phone, message, address, products, totalPrice } = req.body;
   try {
     const order = await orderModel.create({
       user: user.id,
       paymentMethod: 'cash',
       paymentInfo: {
+        user_name: user_name,
+        phone: phone,
+        message: message,
+        address: address,
         products: products.map((p) => p.product),
         orderCode: Number(String(Date.now()).slice(-6)),
         amount: totalPrice,
         status: 'PENDING',
-        message: message,
-        address: address,
         totalPrice: products.reduce(
           (accumulator, p) => p.product.totalPrice + accumulator,
           0
@@ -79,7 +83,7 @@ export const createCashPayment = async (req, res) => {
     res.send('Something went error');
   }
 };
-export const getAllOrders = async (req, res) => {
+export const getAllOrdersUser = async (req, res) => {
   const { user } = req.decoded;
   const { page, status } = req.query;
   let query = {};
@@ -103,13 +107,15 @@ export const getAllOrders = async (req, res) => {
       .limit(8)
       .lean();
     if (findAllOrders)
-      return res.status(200).json({ orders: findAllOrders, totalPage: total });
-    return res.status(404).json({ messages: 'Not found orders in database' });
+      return res.status(200).json({
+        orders: findAllOrders !== null ? findAllOrders : [],
+        totalPage: total,
+      });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-export const getOrderById = async (req, res) => {
+export const getOrdersUserById = async (req, res) => {
   const { user } = req.decoded;
   const { orderId } = req.params;
   const { payment } = req.query;
@@ -145,12 +151,11 @@ export const getOrderById = async (req, res) => {
 
 export const updateOrder = async (req, res) => {
   try {
-    const { user } = req.decoded;
     const { orderId } = req.params;
-    const { status } = req.body;
+    const { status, userId } = req.body;
     const updatedOrder = await orderModel.findOneAndUpdate(
       {
-        user: user.id,
+        user: userId,
         'paymentInfo.orderCode': Number(orderId),
       },
       {

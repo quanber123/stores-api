@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
-  user: {
-    type: String,
-    require: true,
-  },
+  user: String,
   paymentMethod: String,
   paymentInfo: {
+    user_name: String,
+    phone: Number,
     message: String,
     address: String,
     products: [
