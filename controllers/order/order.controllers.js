@@ -190,3 +190,36 @@ export const updateOrder = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const getAllOrdersByUsersId = async (req, res) => {
+  const { id } = req.params;
+  const { page } = req.query;
+  try {
+    const totalOrders = await orderModel.countDocuments({ user: id });
+    const totalPage = Math.ceil(totalOrders / 10);
+    const orders = await orderModel
+      .find({ user: id })
+      .sort({ created_at: -1 })
+      .skip(Number(page - 1) * 10)
+      .limit(10)
+      .lean();
+    return res
+      .status(200)
+      .json({ orders: orders !== null ? orders : [], totalPage: totalPage });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getOrderByCode = async (req, res) => {
+  const { code } = req.params;
+  try {
+    const order = await orderModel
+      .findOne({ 'paymentInfo.orderCode': code })
+      .lean();
+    if (order) return res.status(200).json(order);
+    return res.status(404).json({ message: 'Not Found Order!' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};

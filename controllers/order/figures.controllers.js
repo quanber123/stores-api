@@ -1,3 +1,4 @@
+import unidecode from 'unidecode';
 import authUserModel from '../../models/auth/users/auth-user.model.js';
 import oauthUserModel from '../../models/auth/users/oauth-user.model.js';
 import orderModel from '../../models/order/order.model.js';
@@ -287,46 +288,54 @@ export const getBestSellingProducts = async (req, res) => {
 };
 
 export const getAllOrders = async (req, res) => {
-  const { page, customer, status, order_limits, method, date } = req.query;
+  const { page, search, status, order_limits, method, start_date, end_date } =
+    req.query;
   let query = {};
   try {
-    if (customer) {
-      if (search) {
-        const unaccentedQueryString = unidecode(search);
-        const regex = new RegExp(unaccentedQueryString, 'i');
-        query['paymentInfo.user_name'] = { $regex: regex };
+    if (search) {
+      const unaccentedQueryString = unidecode(search);
+      const regex = new RegExp(unaccentedQueryString, 'i');
+      query['paymentInfo.user_name'] = { $regex: regex };
+    }
+    if (order_limits && !start_date && !end_date) {
+      const currDate = new Date();
+      currDate.setHours(0, 0, 0, 0);
+      currDate.setDate(currDate.getDate() - parseInt(order_limits));
+      query['created_at'] = { $gte: currDate };
+    }
+    if (start_date && end_date && !order_limits) {
+      let startDate = new Date(start_date);
+      let endDate = new Date(end_date);
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        query['created_at'] = { $gte: startDate, $lte: endDate };
       }
     }
-    if (date) {
-      let startDate = new Date(date);
-      currDate.setHours(0, 0, 0, 0);
-      let endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999);
-      query = {
-        created_at: {
-          $gte: startDate,
-          $lte: endDate,
-        },
-      };
+    if (order_limits && start_date && end_date) {
+      let startDate = new Date(start_date);
+      let endDate = new Date(end_date);
+      let day = new Date(endDate);
+      day.setDate(endDate.getDate() - parseInt(order_limits));
+      if (
+        !isNaN(startDate.getTime()) &&
+        !isNaN(endDate.getTime()) &&
+        day < startDate
+      ) {
+        query['created_at'] = { $gte: day, $lte: endDate };
+      } else if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        query['created_at'] = { $gte: startDate, $lte: endDate };
+      }
     }
     if (status) {
       query['paymentInfo.status'] = status;
     }
-    if (order_limits) {
-      let startDay = new Date();
-      startDay.setHours(0, 0, 0, 0);
-      let endDay = new Date();
-      endDay.setHours(23, 59, 59, 999);
-      startDay.setDate(date.getDate() - parseInt(order_limits));
-      endDay.setDate(date.getDate() - parseInt(order_limits));
-      query.created_at = {
-        $gte: startDay,
-        $lte: endDay,
-      };
-    }
     if (method) {
       query.paymentMethod = method;
     }
+    console.log(query);
     const totalOrders = await orderModel.countDocuments(query);
     const totalPage = Math.ceil(totalOrders / 10);
     const data = await orderModel
@@ -334,11 +343,9 @@ export const getAllOrders = async (req, res) => {
       .sort({ created_at: -1 })
       .skip((page - 1) * 10)
       .limit(10);
-    return res
-      .status(200)
-      .json({ orders: data !== null ? data : [], totalPage: totalPage });
+    return res.status(200).json({ orders: data || [], totalPage: totalPage });
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: error.message });
   }
 };
 
