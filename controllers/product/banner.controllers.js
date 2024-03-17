@@ -40,15 +40,39 @@ export const createBanner = async (req, res) => {
     const banner = {
       id: String(Date.now()).slice(-6),
       image: null,
+      imageLaptop: null,
+      imageTablet: null,
+      imageMobile: null,
       content: content,
       sub_content: sub_content,
       category: category,
     };
-    const optimized = await optimizedImg(file, 1920, 950, 100);
-    if (optimized) {
-      banner.image = `${process.env.APP_URL}/${optimized}`;
+    const [
+      optimizedImgDesktop,
+      optimizedImgLaptop,
+      optimizedImgTablet,
+      optimizedImgMobile,
+    ] = await Promise.all([
+      optimizedImg(file, 1920, 950, 100),
+      optimizedImg(file, 1200, 700, 100),
+      optimizedImg(file, 600, 400, 100),
+      optimizedImg(file, 400, 400, 100),
+    ]);
+    if (
+      optimizedImgDesktop &&
+      optimizedImgLaptop &&
+      optimizedImgTablet &&
+      optimizedImgMobile
+    ) {
+      banner.image = `${process.env.APP_URL}/${optimizedImgDesktop}`;
+      banner.imageLaptop = `${process.env.APP_URL}/${optimizedImgLaptop}`;
+      banner.imageTablet = `${process.env.APP_URL}/${optimizedImgTablet}`;
+      banner.imageMobile = `${process.env.APP_URL}/${optimizedImgMobile}`;
     } else {
       banner.image = `${process.env.APP_URL}/${file.path}`;
+      banner.imageLaptop = `${process.env.APP_URL}/${file.path}`;
+      banner.imageTablet = `${process.env.APP_URL}/${file.path}`;
+      banner.imageMobile = `${process.env.APP_URL}/${file.path}`;
     }
     const newBanner = new bannerModel(banner);
     const savedBanner = await newBanner.save();
