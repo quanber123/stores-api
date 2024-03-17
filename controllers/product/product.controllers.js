@@ -171,7 +171,8 @@ export const getProductById = async (req, res) => {
     const data = await checkCache(`products:${id}`, async () => {
       const product = await productModel
         .findById(id)
-        .populate(['details.category', 'details.tags']);
+        .populate(['details.category', 'details.tags'])
+        .populate('coupon');
       await redisClient.set(`products:${product._id}`, JSON.stringify(product));
       return product;
     });
@@ -183,7 +184,7 @@ export const getProductById = async (req, res) => {
       })
       .sort({ created_at: -1 })
       .populate(['details.category', 'details.tags'])
-      .populate('sale')
+      .populate('coupon')
       .lean()
       .limit(8);
 
@@ -319,7 +320,7 @@ export const createProduct = async (req, res) => {
       });
       const newProduct = new productModel(product);
       const savedProduct = await (await newProduct.save())
-        .populate(['details.category', 'details.tags', 'sale'])
+        .populate(['details.category', 'details.tags', 'coupon'])
         .lean();
       await esClient.index({
         index: 'products',
@@ -341,7 +342,7 @@ export const updateProduct = async (req, res) => {
   try {
     const currProduct = await productModel
       .updateOne({ _id: id }, product)
-      .populate(['details.category', 'details.tags', 'sale']);
+      .populate(['details.category', 'details.tags', 'coupon']);
     if (!currProduct)
       return res.stats(404).json({ message: 'Not found Product!' });
     await esClient.update({
@@ -376,7 +377,7 @@ export const deleteProduct = async (req, res) => {
         { _id: id },
         { $pull: { 'details.variants': { size, color, quantity } } }
       )
-      .populate(['details.category', 'details.tags', 'sale']);
+      .populate(['details.category', 'details.tags', 'coupon']);
     await esClient.update({
       index: 'products',
       id: findProduct._id,
