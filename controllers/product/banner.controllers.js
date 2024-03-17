@@ -1,9 +1,11 @@
+import { redisClient } from '../../config/redis.js';
+import { optimizedImg } from '../../middleware/optimizedImg.js';
 import bannerModel from '../../models/product/banner.model.js';
 // Get All Banners
 
 export const getAllBanners = async (req, res) => {
   try {
-    const findAllBanners = await bannerModel.find().lean();
+    const findAllBanners = await bannerModel.find().populate('category').lean();
     if (findAllBanners) {
       return res.status(200).json(findAllBanners);
     }
@@ -15,8 +17,10 @@ export const getAllBanners = async (req, res) => {
 // Create Banner
 
 export const createBanner = async (req, res) => {
-  const banner = req.body;
+  const { content, sub_content, category } = req.body;
+  const file = req.file;
   try {
+    if (!file) return res.status(400).json({ message: 'No file uploaded!' });
     const countBanner = await bannerModel.countDocuments();
     if (countBanner > 3) {
       return res
@@ -25,18 +29,38 @@ export const createBanner = async (req, res) => {
     }
     const existingBanner = await bannerModel
       .findOne({
-        content: banner.content,
+        content: content,
+        category: category,
       })
       .lean();
-    if (existingBanner) {
+    if (existingBanner)
       return res.status(409).json({
-        message: `Banner content ${banner.content} already existed!`,
+        message: `Banner content or category is already existed!`,
       });
+    const banner = {
+      id: String(Date.now()).slice(-6),
+      image: null,
+      content: content,
+      sub_content: sub_content,
+      category: category,
+    };
+    const optimized = await optimizedImg(file, 1920, 950, 100);
+    if (optimized) {
+      banner.image = `${process.env.APP_URL}/${optimized}`;
     } else {
-      const newBanner = new bannerModel(banner);
-      const savedBanner = await newBanner.save();
-      return res.status(200).json(savedBanner);
+      banner.image = `${process.env.APP_URL}/${file.path}`;
     }
+    const newBanner = new bannerModel(banner);
+    const savedBanner = await newBanner.save();
+    if (savedBanner) {
+      await redisClient.set(
+        `banners:${savedBanner.id}`,
+        JSON.stringify(savedBanner)
+      );
+    }
+    return res
+      .status(201)
+      .json({ message: 'banner created successfully', savedBanner });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

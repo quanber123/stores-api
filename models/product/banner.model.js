@@ -1,13 +1,12 @@
 import mongoose from 'mongoose';
 const bannerSchema = new mongoose.Schema({
+  id: String,
   image: String,
-  content: {
-    type: String,
-    lowercase: true,
-  },
+  content: String,
+  sub_content: String,
   category: {
-    type: String,
-    lowercase: true,
+    type: mongoose.SchemaTypes.ObjectId,
+    ref: 'Category',
   },
 });
 

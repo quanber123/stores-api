@@ -21,7 +21,7 @@ export const uploadImg = multer({
   fileFilter: (req, file, cb) => {
     const fileExtension = path.extname(file.originalname).toLowerCase();
     if (!allowedExtensions.includes(fileExtension)) {
-      cb(new Error('Invalid file format. Only images are allowed.'), false);
+      cb(new Error('Invalid file format. Only images are allowed.'), true);
     } else {
       cb(null, true);
     }

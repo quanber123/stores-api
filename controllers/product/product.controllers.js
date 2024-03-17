@@ -66,7 +66,7 @@ export const getAllProducts = async (req, res) => {
       .find(query)
       .sort(sortQuery)
       .populate(['details.category', 'details.tags'])
-      .populate('sale')
+      .populate('coupon')
       .skip((page - 1) * 8)
       .limit(8)
       .lean();

@@ -18,7 +18,6 @@ import routerBanner from './router/product/banner.router.js';
 import routerBlog from './router/blog/blog.router.js';
 import routerNotify from './router/auth/users/notify.router.js';
 import { generateFakeBlog, generateFakeProduct } from './middleware/tools.js';
-import routerSale from './router/product/sale.router.js';
 import routerCart from './router/cart/cart.router.js';
 import routerPayment from './router/order/order.router.js';
 import { connectRedis } from './config/redis.js';
@@ -31,6 +30,7 @@ import tagModel from './models/tag/tag.model.js';
 import routerFigures from './router/order/figures.router.js';
 import routerStatusOrder from './router/order/status.order.router.js';
 import routerCountry from './router/country/country.router.js';
+import routerCoupon from './router/product/coupon.router.js';
 config();
 connectRedis();
 connectDb();
@@ -72,14 +72,12 @@ app.use(
 );
 async function seedProductData() {
   const PRODUCTS = await Promise.all(
-    Array.from({ length: 500 }, generateFakeProduct)
+    Array.from({ length: 50 }, generateFakeProduct)
   );
   await productModel.create(PRODUCTS);
 }
 async function seedBlogData() {
-  const BLOGS = await Promise.all(
-    Array.from({ length: 500 }, generateFakeBlog)
-  );
+  const BLOGS = await Promise.all(Array.from({ length: 50 }, generateFakeBlog));
   await blogModel.create(BLOGS);
 }
 // seedProductData()
@@ -106,7 +104,7 @@ app.use(routerStore);
 app.use(routerPublisher);
 app.use(routerTag);
 app.use(routerCategory);
-app.use(routerSale);
+app.use(routerCoupon);
 app.use(routerNotify);
 app.use(routerCart);
 app.use(routerUser);

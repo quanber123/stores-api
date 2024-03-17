@@ -1,7 +1,7 @@
 import sharp from 'sharp';
-export const optimizedImg = async (file, resize, quality) => {
+export const optimizedImg = async (file, width, height, quality) => {
   const newImg = await sharp(file.path)
-    .resize(resize)
+    .resize(width, height)
     .webp({ quality: quality })
     .toFile(
       'public/uploads/optimized/optimized_' +

@@ -6,12 +6,13 @@ import {
   updateCategory,
   deleteCategory,
 } from '../../controllers/label/category/category.controllers.js';
+import { uploadImg } from '../../middleware/uploadImg.js';
 const routerCategory = Router();
 routerCategory.use(json());
 routerCategory
   .route('/api/categories')
   .get(getAllCategories)
-  .post(createCategory);
+  .post(uploadImg, createCategory);
 routerCategory
   .route('/api/categories/:id')
   .put(updateCategory)

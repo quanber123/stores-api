@@ -19,11 +19,12 @@ export const generateFakeProduct = async () => {
     faker.image.urlPicsumPhotos()
   );
   const numberOfVariants = faker.number.int({ min: 1, max: 3 });
+  const quantity = faker.number.int({ min: 0, max: 50 });
   const variants = Array.from({ length: numberOfVariants }, () => ({
     size: getRandomElements(sizes, 1)[0],
     color: faker.color.human(),
     quantity: faker.number.int({ min: 0, max: 50 }),
-    inStock: faker.datatype.boolean(),
+    inStock: quantity > 1 ? true : false,
   }));
 
   const fakeProduct = {

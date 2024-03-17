@@ -335,7 +335,6 @@ export const getAllOrders = async (req, res) => {
     if (method) {
       query.paymentMethod = method;
     }
-    console.log(query);
     const totalOrders = await orderModel.countDocuments(query);
     const totalPage = Math.ceil(totalOrders / 10);
     const data = await orderModel

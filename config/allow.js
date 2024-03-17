@@ -1,1 +1,1 @@
-export const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+export const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
