@@ -24,6 +24,7 @@ export const getAllCoupons = async (req, res) => {
 };
 export const updateProductsForSale = async (coupon) => {
   try {
+    // Tìm và cập nhật sản phẩm phù hợp với coupon
     const updatedProducts = await productModel
       .find({
         'details.tags': { $in: coupon.tags },
@@ -31,6 +32,7 @@ export const updateProductsForSale = async (coupon) => {
         price: { $gte: coupon.min_amount },
       })
       .lean();
+
     const updatePromises = updatedProducts.map(async (product) => {
       let totalDiscount;
       const discount = (product.price * coupon.discount) / 100;
@@ -40,16 +42,18 @@ export const updateProductsForSale = async (coupon) => {
         totalDiscount = discount;
       }
       const salePrice = product.price - totalDiscount;
+
       product.coupon = coupon._id;
       product.saleAmount = totalDiscount;
       product.finalPrice = salePrice;
-      await productModel.findOneAndUpdate({ id: product.id }, product);
+      await productModel.findOneAndUpdate({ _id: product._id }, product);
     });
     await Promise.all(updatePromises);
   } catch (error) {
     console.error('Error updating products for sale:', error);
   }
 };
+
 export const createCoupon = async (req, res) => {
   const {
     name,
@@ -101,6 +105,16 @@ export const createCoupon = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+const updateProducts = async (coupon) => {
+  const updatedProducts = await productModel.find({ coupon: coupon._id });
+  const updatePromises = updatedProducts.map(async (product) => {
+    product.coupon = null;
+    product.saleAmount = 0;
+    product.finalPrice = product.price;
+    await productModel.findOneAndUpdate({ _id: product._id }, product);
+  });
+  await Promise.all(updatePromises);
+};
 export const publishedCoupon = async (req, res) => {
   const { id } = req.params;
   const { published } = req.body;
@@ -109,13 +123,14 @@ export const publishedCoupon = async (req, res) => {
       { id: id },
       { published: published }
     );
-    if (updatedCoupon && updatedCoupon.published) {
+    if (updatedCoupon && published === true) {
       await updateProductsForSale(updatedCoupon);
       return res
         .status(200)
         .json({ message: 'Coupon updated successfully', updatedCoupon });
     }
-    if (updatedCoupon) {
+    if (updatedCoupon && published === false) {
+      await updateProducts(updatedCoupon);
       return res
         .status(200)
         .json({ message: 'Coupon updated successfully', updatedCoupon });
@@ -174,16 +189,6 @@ export const updateCoupon = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
-};
-const updateProducts = async (coupon) => {
-  const updatedProducts = await productModel.find({ coupon: coupon._id });
-  const updatePromises = updatedProducts.map(async (product) => {
-    product.coupon = null;
-    product.saleAmount = 0;
-    product.finalPrice = product.price;
-    await productModel.findOneAndUpdate({ id: product.id }, product);
-  });
-  await Promise.all(updatePromises);
 };
 export const deleteCoupon = async (req, res) => {
   const { id } = req.params;

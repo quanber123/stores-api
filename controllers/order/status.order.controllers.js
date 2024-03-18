@@ -43,7 +43,7 @@ export const createStatusOrder = async (req, res) => {
 };
 
 export const deleteStatusOrder = async (req, res) => {
-  const { id } = req.params.id;
+  const { id } = req.params;
   try {
     const deletedStatus = await statusOrderModel.findByIdAndDelete(id);
     if (deletedStatus) {

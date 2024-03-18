@@ -12,7 +12,7 @@ routerBanner.use(json());
 routerBanner
   .route('/api/banners')
   .get(getAllBanners)
-  .post(uploadImg, createBanner);
+  .post(uploadImg.single('image'), createBanner);
 routerBanner.route('/api/banners/:id').put(updateBanner).delete(deleteBanner);
 
 export default routerBanner;

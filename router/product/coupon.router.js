@@ -13,7 +13,7 @@ routerCoupon.use(json());
 routerCoupon
   .route('/api/coupons')
   .get(getAllCoupons)
-  .post(uploadImg, createCoupon);
+  .post(uploadImg.single('image'), createCoupon);
 routerCoupon.route('/api/coupons/:id').put(updateCoupon).delete(deleteCoupon);
 routerCoupon.route('/api/coupons_toggle_published/:id').put(publishedCoupon);
 routerCoupon.route('/api/check_coupon').get(checkAndUpdateCoupon);

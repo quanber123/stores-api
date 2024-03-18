@@ -39,11 +39,6 @@ const detailSchema = new mongoose.Schema({
   weight: String,
   dimensions: String,
   materials: String,
-  stores: { type: mongoose.SchemaTypes.ObjectId, ref: 'Store' },
-  publishers: {
-    type: mongoose.SchemaTypes.ObjectId,
-    ref: 'Publisher',
-  },
 });
 
 const productSchema = new mongoose.Schema({
@@ -64,6 +59,7 @@ const productSchema = new mongoose.Schema({
   coupon: {
     type: mongoose.SchemaTypes.ObjectId,
     ref: 'Coupon',
+    default: null,
   },
   saleAmount: {
     type: Number,
@@ -86,6 +82,10 @@ const productSchema = new mongoose.Schema({
     default: () => Date.now(),
   },
   details: detailSchema,
+  published: {
+    type: Boolean,
+    default: true,
+  },
   // reviews: [
   //   {
   //     type: mongoose.SchemaTypes.ObjectId,

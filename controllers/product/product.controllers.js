@@ -10,6 +10,7 @@ import { esClient } from '../../config/elasticsearch.js';
 import { checkCache } from '../../modules/cache.js';
 import { redisClient } from '../../config/redis.js';
 import { docWithoutId } from '../../modules/elasticsearch.js';
+import { optimizedImg } from '../../middleware/optimizedImg.js';
 // Get all products
 export const getAllProducts = async (req, res) => {
   const { category, tag, sort, search, page } = req.query;
@@ -51,6 +52,12 @@ export const getAllProducts = async (req, res) => {
         break;
       case 'price':
         sortQuery = { price: -1 };
+        break;
+      case 'published':
+        sortQuery = { published: -1 };
+        break;
+      case 'unpublished':
+        sortQuery = { published: 1 };
         break;
       default:
         break;
@@ -282,58 +289,135 @@ export const getProductById = async (req, res) => {
 // };
 // Create Product
 
+// export const createProduct = async (req, res) => {
+//   const product = req.body;
+//   try {
+//     if (!product.details || !product.details.variants)
+//       return res.status(400).json({ message: 'Variants not null!' });
+//     const existingProduct = await productModel
+//       .findOne({ name: product.name })
+//       .lean();
+//     if (existingProduct) {
+//       const { variants } = product.details;
+//       variants.forEach((variant) => {
+//         const existingVariant = existingProduct.details.variants.find(
+//           (v) =>
+//             v.size === variant.size?.toLowerCase() &&
+//             v.color === variant.color?.toLowerCase()
+//         );
+//         if (existingVariant) {
+//           existingVariant.inStock = variant.quantity > 0 ? true : false;
+//           existingVariant.quantity += variant.quantity;
+//         } else {
+//           variant.inStock = variant.quantity > 0 ? true : false;
+//           existingProduct.details.variants.push(variant);
+//         }
+//       });
+//       const updatedProduct = await existingProduct.save().lean();
+//       await esClient.update({
+//         index: 'products',
+//         id: updatedProduct._id,
+//         doc: docWithoutId(updatedProduct),
+//       });
+//       return res.status(200).json({ product: updatedProduct });
+//     } else {
+//       const { variants } = product.details;
+//       variants.forEach((variant) => {
+//         variant.inStock = variant.quantity > 0 ? true : false;
+//       });
+//       const newProduct = new productModel(product);
+//       const savedProduct = await (await newProduct.save())
+//         .populate(['details.category', 'details.tags', 'coupon'])
+//         .lean();
+//       await esClient.index({
+//         index: 'products',
+//         id: savedProduct._id,
+//         document: docWithoutId(savedProduct),
+//       });
+//       return res.status(200).json({ product: savedProduct });
+//     }
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
 export const createProduct = async (req, res) => {
-  const product = req.body;
+  const {
+    name,
+    description,
+    shortDescription,
+    weight,
+    dimensions,
+    materials,
+    price,
+    category,
+    tags,
+    variants,
+  } = req.body;
+  const files = req.files;
+  const product = {
+    name: name,
+    images: [],
+    price: Number(price),
+    finalPrice: Number(price),
+    details: {
+      variants: JSON.parse(variants),
+      description: description,
+      shortDescription: shortDescription,
+      weight: weight,
+      dimensions: dimensions,
+      materials: materials,
+      tags: [...JSON.parse(tags)],
+      category: category,
+    },
+  };
   try {
-    if (!product.details || !product.details.variants)
-      return res.status(400).json({ message: 'Variants not null!' });
-    const existingProduct = await productModel
-      .findOne({ name: product.name })
-      .lean();
-    if (existingProduct) {
-      const { variants } = product.details;
-      variants.forEach((variant) => {
-        const existingVariant = existingProduct.details.variants.find(
-          (v) =>
-            v.size === variant.size?.toLowerCase() &&
-            v.color === variant.color?.toLowerCase()
-        );
-        if (existingVariant) {
-          existingVariant.inStock = variant.quantity > 0 ? true : false;
-          existingVariant.quantity += variant.quantity;
-        } else {
-          variant.inStock = variant.quantity > 0 ? true : false;
-          existingProduct.details.variants.push(variant);
-        }
-      });
-      const updatedProduct = await existingProduct.save().lean();
-      await esClient.update({
-        index: 'products',
-        id: updatedProduct._id,
-        doc: docWithoutId(updatedProduct),
-      });
-      return res.status(200).json({ product: updatedProduct });
+    if (
+      !name ||
+      !description ||
+      !shortDescription ||
+      !weight ||
+      !dimensions ||
+      !materials ||
+      !price ||
+      !category ||
+      tags.length === 0 ||
+      variants.length === 0 ||
+      !files
+    )
+      return res.status(400).json({ message: 'Bad requests!' });
+    const duplicatedProduct = await productModel.findOne({
+      name: name.toLowerCase(),
+    });
+    if (duplicatedProduct)
+      return res.status(409).json({ message: 'This product already existed!' });
+    product.details.variants = product.details.variants.map((v) => {
+      return { color: v.color, size: v.size, quantity: Number(v.quantity) };
+    });
+    const optimizationPromises = files.map(async (file) => {
+      const optimized = await optimizedImg(file, 400, 400, 100);
+      if (optimized) {
+        return `${process.env.APP_URL}/${optimized}`;
+      } else {
+        return `${process.env.APP_URL}/${file.path}`;
+      }
+    });
+    const imageUrls = await Promise.all(optimizationPromises);
+    product.images.push(...imageUrls);
+    const newProduct = new productModel(product);
+    const savedProduct = await newProduct.save();
+    if (savedProduct) {
+      await redisClient.set(
+        `products:${savedProduct._id}`,
+        JSON.stringify(savedProduct)
+      );
+      return res.status(201).json({ message: 'Created successfully!' });
     } else {
-      const { variants } = product.details;
-      variants.forEach((variant) => {
-        variant.inStock = variant.quantity > 0 ? true : false;
-      });
-      const newProduct = new productModel(product);
-      const savedProduct = await (await newProduct.save())
-        .populate(['details.category', 'details.tags', 'coupon'])
-        .lean();
-      await esClient.index({
-        index: 'products',
-        id: savedProduct._id,
-        document: docWithoutId(savedProduct),
-      });
-      return res.status(200).json({ product: savedProduct });
+      return res.status(503).json({ message: 'Service Unavailable!' });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-
 // Update Product
 
 export const updateProduct = async (req, res) => {
@@ -466,6 +550,28 @@ export const reviewsProduct = async (req, res) => {
       return res.status(200).json({ message: 'Reviews Successfully!' });
     }
     return res.send('Something went error!');
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const publishedProduct = async (req, res) => {
+  const { id } = req.params;
+  const { published } = req.body;
+  try {
+    const updatedProduct = await productModel.findByIdAndUpdate(id, {
+      published: published,
+    });
+    if (updatedProduct) {
+      await redisClient.set(
+        `products:${updatedProduct._id}`,
+        JSON.stringify(updatedProduct)
+      );
+      return res
+        .status(200)
+        .json({ message: 'Product updated successfully', updatedProduct });
+    }
+    return res.status(404).json({ message: 'Failed to update' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

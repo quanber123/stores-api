@@ -32,7 +32,9 @@ routerUser.route('/api/auth/register').post(userRegister);
 routerUser.route('/api/auth/login').post(userLogin);
 routerUser.route('/api/auth/get-user').get(auth, getUserByToken);
 routerUser.route('/api/users/profile').put(auth, updateProfile);
-routerUser.route('/api/users/:id/avatar').put(auth, uploadImg, updateAvatar);
+routerUser
+  .route('/api/users/:id/avatar')
+  .put(auth, uploadImg.single('image'), updateAvatar);
 routerUser.route('/api/settings/:id').get(auth, getAllSettings);
 routerUser.route('/api/settings').put(auth, toggleNotifications);
 routerUser

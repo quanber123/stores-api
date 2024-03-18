@@ -12,7 +12,7 @@ routerCategory.use(json());
 routerCategory
   .route('/api/categories')
   .get(getAllCategories)
-  .post(uploadImg, createCategory);
+  .post(uploadImg.single('image'), createCategory);
 routerCategory
   .route('/api/categories/:id')
   .put(updateCategory)

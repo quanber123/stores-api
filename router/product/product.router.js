@@ -7,6 +7,7 @@ import {
   getProductById,
   reviewsProduct,
   getReviews,
+  publishedProduct,
 } from '../../controllers/product/product.controllers.js';
 import { auth } from '../../middleware/auth.js';
 import { uploadImg } from '../../middleware/uploadImg.js';
@@ -16,12 +17,13 @@ routerProduct.use(json());
 routerProduct
   .route('/api/products')
   .get(getAllProducts)
-  .post(uploadImg, createProduct);
+  .post(uploadImg.array('images'), createProduct);
 routerProduct
   .route(`/api/products/:id`)
   .get(getProductById)
   .put(updateProduct)
   .delete(deleteProduct);
+routerProduct.route('/api/products_toggle_published/:id').put(publishedProduct);
 routerProduct.route('/api/products/favorite/:id').get(getFavoritesByProduct);
 routerProduct.route('/api/products/reviews/:id').get(getReviews);
 routerProduct.route('/api/products/reviews').post(auth, reviewsProduct);

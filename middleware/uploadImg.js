@@ -26,4 +26,4 @@ export const uploadImg = multer({
       cb(null, true);
     }
   },
-}).single('image');
+});
