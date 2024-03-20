@@ -1,3 +1,4 @@
+import { setCampaign } from '../../middleware/cron.js';
 import { optimizedImg } from '../../middleware/optimizedImg.js';
 import couponModel from '../../models/product/coupon.model.js';
 import productModel from '../../models/product/product.model.js';
@@ -24,7 +25,6 @@ export const getAllCoupons = async (req, res) => {
 };
 export const updateProductsForSale = async (coupon) => {
   try {
-    // Tìm và cập nhật sản phẩm phù hợp với coupon
     const updatedProducts = await productModel
       .find({
         'details.tags': { $in: coupon.tags },
@@ -67,6 +67,15 @@ export const createCoupon = async (req, res) => {
     endDate,
   } = req.body;
   const file = req.file;
+  const today = new Date();
+  i;
+  const couponStartDate = new Date(startDate);
+  const todayDate = today.getDate();
+  const todayMonth = today.getMonth();
+  const todayYear = today.getFullYear();
+  const couponStartDateValue = couponStartDate.getDate();
+  const couponStartMonth = couponStartDate.getMonth();
+  const couponStartYear = couponStartDate.getFullYear();
   const coupon = {
     id: String(Date.now()).slice(-6),
     name: name,
@@ -77,12 +86,22 @@ export const createCoupon = async (req, res) => {
     category: category,
     tags: JSON.parse(tags),
     published: JSON.parse(published),
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
+    startDate:
+      todayDate === couponStartDateValue &&
+      todayMonth === couponStartMonth &&
+      todayYear === couponStartYear
+        ? new Date().setHours(23, 59, 59, 999)
+        : new Date(startDate).setHours(0, 0, 0, 0),
+    endDate: new Date(endDate).setHours(23, 59, 59, 999),
   };
   try {
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded!' });
+    }
+    if (new Date(startDate) < new Date()) {
+      return res
+        .status(500)
+        .json({ message: 'Day created can not less than today!' });
     }
     const duplicatedCoupon = await couponModel.findOne({ name: coupon.name });
     if (duplicatedCoupon)
@@ -95,8 +114,11 @@ export const createCoupon = async (req, res) => {
     }
     const newSale = new couponModel(coupon);
     const savedCoupon = await newSale.save();
-    if (savedCoupon.published) {
-      await updateProductsForSale(savedCoupon);
+    if (savedCoupon) {
+      setCampaign(
+        new Date(savedCoupon.startDate),
+        updateProductsForSale(savedCoupon)
+      );
     }
     res
       .status(201)
@@ -105,7 +127,7 @@ export const createCoupon = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-const updateProducts = async (coupon) => {
+const disabledCoupon = async (coupon) => {
   const updatedProducts = await productModel.find({ coupon: coupon._id });
   const updatePromises = updatedProducts.map(async (product) => {
     product.coupon = null;
@@ -115,87 +137,12 @@ const updateProducts = async (coupon) => {
   });
   await Promise.all(updatePromises);
 };
-export const publishedCoupon = async (req, res) => {
-  const { id } = req.params;
-  const { published } = req.body;
-  try {
-    const updatedCoupon = await couponModel.findOneAndUpdate(
-      { id: id },
-      { published: published }
-    );
-    if (updatedCoupon && published === true) {
-      await updateProductsForSale(updatedCoupon);
-      return res
-        .status(200)
-        .json({ message: 'Coupon updated successfully', updatedCoupon });
-    }
-    if (updatedCoupon && published === false) {
-      await updateProducts(updatedCoupon);
-      return res
-        .status(200)
-        .json({ message: 'Coupon updated successfully', updatedCoupon });
-    }
-    return res.status(404).json({ message: 'Failed to update' });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
-export const updateCoupon = async (req, res) => {
-  const { id } = req.params;
-  const {
-    name,
-    discount,
-    max_discount,
-    min_amount,
-    category,
-    tags,
-    published,
-    startDate,
-    endDate,
-  } = req.body;
-  const file = req.file;
-  const coupon = {
-    name: name,
-    image: null,
-    discount: Number(discount),
-    max_discount: Number(max_discount),
-    min_amount: Number(min_amount),
-    category: category,
-    tags: JSON.parse(tags),
-    published: JSON.parse(published),
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
-  };
-  try {
-    if (!file) {
-      return res.status(400).json({ message: 'No file uploaded!' });
-    }
-    const updatedCoupon = await couponModel.findOneAndUpdate(
-      { id: id },
-      coupon
-    );
-    if (updatedCoupon && updatedCoupon.published) {
-      await updateProductsForSale(updatedCoupon);
-      res
-        .status(200)
-        .json({ message: 'Coupon updated successfully', updatedCoupon });
-    }
-    if (updatedCoupon) {
-      res
-        .status(200)
-        .json({ message: 'Coupon updated successfully', updatedCoupon });
-    }
-    return res.status(404).json({ message: 'Failed to update' });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
 export const deleteCoupon = async (req, res) => {
   const { id } = req.params;
   try {
     const deletedCoupon = await couponModel.findOneAndDelete({ id: id });
     if (deletedCoupon) {
-      await updateProducts(deletedCoupon);
+      await disabledCoupon(deletedCoupon);
       return res.status(200).json({ message: 'Deleted successfully!' });
     }
     return res.status(404).json({ message: `Not found sale!` });
@@ -205,22 +152,21 @@ export const deleteCoupon = async (req, res) => {
 };
 export const checkAndUpdateCoupon = async (req, res) => {
   try {
-    const currTime = new Date();
     const expiredDiscount = await couponModel.find({
-      endDate: { $lte: currTime },
+      endDate: { $lte: new Date() },
       expired: false,
     });
     if (expiredDiscount.length > 0) {
       for (const coupon of expiredDiscount) {
         await couponModel.updateOne({ id: coupon.id }, { expired: true });
-        await updateProducts(coupon);
-        console.log(`Coupon ${code.id} has expired.`);
+        await disabledCoupon(coupon);
+        console.log(`Coupon ${coupon.id} has expired.`);
       }
       return res.status(200).json(expiredDiscount);
-    } else {
-      return res.status(200).json({ message: 'No coupons expired!' });
     }
+    return res.status(200).json({ message: 'No coupons expired!' });
   } catch (error) {
     console.error('Error occurred while checking expiration:', error);
+    return res.status(500).json({ message: error.message });
   }
 };

@@ -6,6 +6,8 @@ import {
   firstLoadingCache,
   updateCache,
 } from '../../../modules/cache.js';
+import productModel from '../../../models/product/product.model.js';
+import { productDeletionQueue } from '../../../config/queue.js';
 // Get All Tags
 
 export const getAllTags = async (req, res) => {
@@ -66,14 +68,21 @@ export const updateTag = async (req, res) => {
 };
 
 // Delete Tag
-
 export const deleteTag = async (req, res) => {
   const { id } = req.params;
   try {
     const deletedTag = await tagModel.findByIdAndDelete(id);
-    if (deletedTag) {
+    if (!deletedTag) {
       return res.status(404).json({ message: `Not found Tag by id: ${id}` });
     } else {
+      const deleteProducts = await productModel.find({
+        'details.tags': deletedTag._id,
+      });
+      deleteProducts.forEach((product) => {
+        productDeletionQueue.add({
+          productId: product._id,
+        });
+      });
       await deleteCache(`tags:${id}`, deletedTag);
       return res.status(200).json(deletedTag);
     }

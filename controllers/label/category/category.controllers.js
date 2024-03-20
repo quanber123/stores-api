@@ -93,7 +93,6 @@ export const updateCategory = async (req, res) => {
 };
 
 // Delete Category
-
 export const deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
@@ -103,15 +102,16 @@ export const deleteCategory = async (req, res) => {
         .status(404)
         .json({ message: `Not found Category by id: ${id}` });
     } else {
-      const deleteProducts = await productModel.deleteMany({
+      const deleteProducts = await productModel.find({
         'details.category': deletedCategory._id,
       });
-      await Promise.all([
-        deleteProducts.forEach(async (product) => {
-          await deleteCache(`products:${product.id}`);
-        }),
-        await deleteCache(`categories:${id}`, deletedCategory),
-      ]);
+
+      deleteProducts.forEach((product) => {
+        productDeletionQueue.add({
+          productId: product._id,
+        });
+      }),
+        await deleteCache(`categories:${id}`, deletedCategory);
       return res.status(200).json(deletedCategory);
     }
   } catch (error) {

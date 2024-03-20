@@ -448,34 +448,46 @@ export const updateProduct = async (req, res) => {
 
 // Delete Product
 
+// export const deleteProduct = async (req, res) => {
+//   const id = req.params.id;
+//   const size = req.params.size;
+//   const color = req.params.color;
+//   const quantity = req.params.quantity;
+//   if (!id || !size || !color || !quantity)
+//     return res.status(400).json({ message: 'All Params are required!' });
+//   try {
+//     const findProduct = await productModel
+//       .updateOne(
+//         { _id: id },
+//         { $pull: { 'details.variants': { size, color, quantity } } }
+//       )
+//       .populate(['details.category', 'details.tags', 'coupon']);
+//     await esClient.update({
+//       index: 'products',
+//       id: findProduct._id,
+//       doc: docWithoutId(findProduct),
+//     });
+//     await redisClient.del(`products:${findProduct._id}`);
+//     if (!findProduct) {
+//       await esClient.delete({
+//         index: 'products',
+//         id: id,
+//       });
+//       return res.status(404).json({ message: `Not found product by id ${id}` });
+//     }
+//     return res.stats(200).json({ message: `Delete Successfully!` });
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message });
+//   }
+// };
 export const deleteProduct = async (req, res) => {
-  const id = req.params.id;
-  const size = req.params.size;
-  const color = req.params.color;
-  const quantity = req.params.quantity;
-  if (!id || !size || !color || !quantity)
-    return res.status(400).json({ message: 'All Params are required!' });
+  const { id } = req.params;
   try {
-    const findProduct = await productModel
-      .updateOne(
-        { _id: id },
-        { $pull: { 'details.variants': { size, color, quantity } } }
-      )
-      .populate(['details.category', 'details.tags', 'coupon']);
-    await esClient.update({
-      index: 'products',
-      id: findProduct._id,
-      doc: docWithoutId(findProduct),
-    });
-    await redisClient.del(`products:${findProduct._id}`);
-    if (!findProduct) {
-      await esClient.delete({
-        index: 'products',
-        id: id,
-      });
-      return res.status(404).json({ message: `Not found product by id ${id}` });
+    const deletedProduct = await productModel.findByIdAndDelete(id);
+    if (deletedProduct) {
+      await redisClient.del(`products:${deletedProduct._id}`);
     }
-    return res.stats(200).json({ message: `Delete Successfully!` });
+    return res.status(200).json({ message: 'Deleted successfully!' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

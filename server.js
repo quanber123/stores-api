@@ -21,7 +21,7 @@ import { generateFakeBlog, generateFakeProduct } from './middleware/tools.js';
 import routerCart from './router/cart/cart.router.js';
 import routerPayment from './router/order/order.router.js';
 import { connectRedis } from './config/redis.js';
-import { connectElasticSearch, esClient } from './config/elasticsearch.js';
+// import { connectElasticSearch, esClient } from './config/elasticsearch.js';
 // import { firstLoadingElasticSearch } from './modules/elasticsearch.js';
 import productModel from './models/product/product.model.js';
 import blogModel from './models/blog/blog.model.js';
@@ -31,6 +31,8 @@ import routerFigures from './router/order/figures.router.js';
 import routerStatusOrder from './router/order/status.order.router.js';
 import routerCountry from './router/country/country.router.js';
 import routerCoupon from './router/product/coupon.router.js';
+import { setCampaign } from './middleware/cron.js';
+import { checkAndUpdateCoupon } from './controllers/product/coupons.controllers.js';
 config();
 connectRedis();
 connectDb();
@@ -41,7 +43,7 @@ connectDb();
 //     {
 //       type: 'products',
 //       model: productModel,
-//       populate: ['details.category', 'details.tags', 'sale'],
+//       populate: ['details.category', 'details.tags', 'coupon'],
 //     },
 //     {
 //       type: 'blogs',
@@ -94,6 +96,7 @@ async function seedBlogData() {
 //   .catch((error) => {
 //     console.error('Error seeding data:', error.message);
 //   });
+setCampaign('0 0 * * * *', checkAndUpdateCoupon);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(routerAuth);
