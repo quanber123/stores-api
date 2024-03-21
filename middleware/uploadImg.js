@@ -14,13 +14,12 @@ const storage = multer.diskStorage({
     cb(null, filename);
   },
 });
-
 export const uploadImg = multer({
   storage: storage,
   limits: { fieldSize: 25 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const fileExtension = path.extname(file.originalname).toLowerCase();
-    if (!allowedExtensions.includes(fileExtension)) {
+    if (file && !allowedExtensions.includes(fileExtension)) {
       cb(new Error('Invalid file format. Only images are allowed.'), true);
     } else {
       cb(null, true);

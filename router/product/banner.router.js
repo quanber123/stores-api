@@ -13,6 +13,9 @@ routerBanner
   .route('/api/banners')
   .get(getAllBanners)
   .post(uploadImg.single('image'), createBanner);
-routerBanner.route('/api/banners/:id').put(updateBanner).delete(deleteBanner);
+routerBanner
+  .route('/api/banners/:id')
+  .put(uploadImg.single('image'), updateBanner)
+  .delete(deleteBanner);
 
 export default routerBanner;

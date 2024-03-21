@@ -150,7 +150,7 @@ export const deleteCoupon = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-export const checkAndUpdateCoupon = async (req, res) => {
+export const checkAndUpdateCoupon = async () => {
   try {
     const expiredDiscount = await couponModel.find({
       endDate: { $lte: new Date() },
@@ -162,11 +162,8 @@ export const checkAndUpdateCoupon = async (req, res) => {
         await disabledCoupon(coupon);
         console.log(`Coupon ${coupon.id} has expired.`);
       }
-      return res.status(200).json(expiredDiscount);
     }
-    return res.status(200).json({ message: 'No coupons expired!' });
   } catch (error) {
     console.error('Error occurred while checking expiration:', error);
-    return res.status(500).json({ message: error.message });
   }
 };

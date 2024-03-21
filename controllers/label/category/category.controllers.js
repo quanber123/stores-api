@@ -59,7 +59,7 @@ export const createCategory = async (req, res) => {
     const savedCategory = await newCategory.save();
     if (savedCategory) {
       await redisClient.set(
-        `categories:${savedCategory.id}`,
+        `categories:${savedCategory._id}`,
         JSON.stringify(savedCategory)
       );
     }
@@ -76,17 +76,41 @@ export const createCategory = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
   const { id } = req.params;
-  const category = req.body;
+  const { name, description } = req.body;
+  const file = req.file;
+  let optimized;
+  let optimizationResults;
   try {
-    const updatedCategory = await categoryModel.findByIdAndUpdate(id, category);
-    if (!updatedCategory) {
-      return res
-        .status(404)
-        .json({ message: `Not found Category by id: ${id}` });
-    } else {
-      await updateCache(`categories:${id}`, updatedCategory);
-      return res.status(200).json(updatedCategory);
+    if (file) {
+      optimized = await optimizedImg(file, 400, 300, 80);
+      if (optimized) {
+        optimizationResults = `${process.env.APP_URL}/${optimized}`;
+      } else {
+        optimizationResults = `${process.env.APP_URL}/${file.path}`;
+      }
+      const updatedCategory = await categoryModel.findByIdAndUpdate(id, {
+        name: name,
+        description: description,
+        image: optimizationResults,
+      });
+      if (updatedCategory) {
+        await updateCache(`categories:${updatedCategory._id}`, updatedCategory);
+        return res
+          .status(200)
+          .json({ message: 'Updated successfully!', updatedCategory });
+      }
     }
+    const updatedCategory = await categoryModel.findByIdAndUpdate(id, {
+      name: name,
+      description: description,
+    });
+    if (updatedCategory) {
+      await updateCache(`categories:${updatedCategory._id}`, updatedCategory);
+      return res
+        .status(200)
+        .json({ message: 'Updated successfully!', updatedCategory });
+    }
+    return res.status(404).json({ message: `Not found Category` });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -102,16 +126,15 @@ export const deleteCategory = async (req, res) => {
         .status(404)
         .json({ message: `Not found Category by id: ${id}` });
     } else {
+      await deleteCache(`categories:${deletedCategory._id}`, deletedCategory);
       const deleteProducts = await productModel.find({
         'details.category': deletedCategory._id,
       });
-
       deleteProducts.forEach((product) => {
         productDeletionQueue.add({
           productId: product._id,
         });
-      }),
-        await deleteCache(`categories:${id}`, deletedCategory);
+      });
       return res.status(200).json(deletedCategory);
     }
   } catch (error) {

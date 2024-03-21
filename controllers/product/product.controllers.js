@@ -7,7 +7,7 @@ import reviewsModel from '../../models/product/reviews.model.js';
 import { hidePartialUsername } from '../../utils/validate.js';
 import { totalPage } from '../../utils/totalPage.js';
 import { esClient } from '../../config/elasticsearch.js';
-import { checkCache } from '../../modules/cache.js';
+import { checkCache, deleteCache, updateCache } from '../../modules/cache.js';
 import { redisClient } from '../../config/redis.js';
 import { docWithoutId } from '../../modules/elasticsearch.js';
 import { optimizedImg } from '../../middleware/optimizedImg.js';
@@ -421,30 +421,95 @@ export const createProduct = async (req, res) => {
 // Update Product
 
 export const updateProduct = async (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
   const product = req.body;
+  const files = req.files;
+  let optimizationPromises = [];
+  let optimizationResults;
   try {
-    const currProduct = await productModel
-      .updateOne({ _id: id }, product)
-      .populate(['details.category', 'details.tags', 'coupon']);
-    if (!currProduct)
-      return res.stats(404).json({ message: 'Not found Product!' });
-    await esClient.update({
-      index: 'products',
-      id: currProduct._id,
-      doc: docWithoutId(currProduct),
+    if (
+      !product.name ||
+      !product.description ||
+      !product.shortDescription ||
+      !product.weight ||
+      !product.dimensions ||
+      !product.materials ||
+      !product.price ||
+      !product.category ||
+      product.tags.length === 0 ||
+      product.variants.length === 0
+    )
+      return res.status(400).json({ message: 'Bad requests!' });
+    if (files) {
+      optimizationPromises = files.map(async (file) => {
+        const optimized = await optimizedImg(file, 400, 400, 100);
+        if (optimized) {
+          return `${process.env.APP_URL}/${optimized}`;
+        } else {
+          return `${process.env.APP_URL}/${file.path}`;
+        }
+      });
+      optimizationResults = await Promise.all(optimizationPromises);
+    }
+    const variants = JSON.parse(product.variants).map((v) => {
+      return { color: v.color, size: v.size, quantity: Number(v.quantity) };
     });
-    await redisClient.set(
-      `products:${currProduct._id}`,
-      JSON.stringify(currProduct)
-    );
+    const update = {
+      name: product.name,
+      images: [...optimizationResults, ...JSON.parse(product.old_images)],
+      price: Number(product.price),
+      finalPrice: Number(product.price),
+      details: {
+        variants: variants,
+        description: product.description,
+        shortDescription: product.shortDescription,
+        weight: product.weight,
+        dimensions: product.dimensions,
+        materials: product.materials,
+        tags: [...JSON.parse(product.tags)],
+        category: product.category,
+      },
+      updated_at: new Date(),
+    };
+    const updatedProduct = await productModel.findByIdAndUpdate(id, update);
+    if (updatedProduct) {
+      await updateCache(`products:${updatedProduct._id}`, updatedProduct);
+      return res
+        .status(200)
+        .json({ message: 'Updated successfully!', updatedProduct });
+    }
     return res
-      .status(200)
-      .json({ message: `Updated Successfully Product ${product}` });
+      .status(404)
+      .json({ message: `Not found product id object: ${id}` });
   } catch (error) {
-    return res.stats(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
+// export const updateProduct = async (req, res) => {
+//   const id = req.params.id;
+//   const product = req.body;
+//   try {
+//     const currProduct = await productModel
+//       .findByIdAndUpdate(id, product)
+//       .populate(['details.category', 'details.tags', 'coupon']);
+//     if (!currProduct)
+//       return res.stats(404).json({ message: 'Not found Product!' });
+//     await esClient.update({
+//       index: 'products',
+//       id: currProduct._id,
+//       doc: docWithoutId(currProduct),
+//     });
+//     await redisClient.set(
+//       `products:${currProduct._id}`,
+//       JSON.stringify(currProduct)
+//     );
+//     return res
+//       .status(200)
+//       .json({ message: `Updated Successfully Product ${product}` });
+//   } catch (error) {
+//     return res.stats(500).json({ message: error.message });
+//   }
+// };
 
 // Delete Product
 
@@ -485,7 +550,7 @@ export const deleteProduct = async (req, res) => {
   try {
     const deletedProduct = await productModel.findByIdAndDelete(id);
     if (deletedProduct) {
-      await redisClient.del(`products:${deletedProduct._id}`);
+      await deleteCache(`products:${deletedProduct._id}`);
     }
     return res.status(200).json({ message: 'Deleted successfully!' });
   } catch (error) {
@@ -541,7 +606,7 @@ export const reviewsProduct = async (req, res) => {
       reviews: reviews,
       avatar: showUser
         ? user.image
-        : 'http://localhost:3000/public/avatar-trang.jpg',
+        : `${process.env.APP_URL}/public/avatar-trang.jpg`,
       showUser: showUser,
       username: showUser ? hidePartialUsername(user.email) : user.email,
     });

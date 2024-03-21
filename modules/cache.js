@@ -40,12 +40,30 @@ export const checkCache = async (key, cb) => {
 };
 export const updateCache = async (key, data) => {
   const dataCache = await redisClient.get(key);
-  if (data._id === JSON.parse(dataCache._id)) return redisClient.set(key, data);
-  return 'Something went wrong!';
+  if (!dataCache) {
+    return 'Cache not found!';
+  }
+  try {
+    await redisClient.set(key, JSON.stringify(data));
+    console.log('Cache updated successfully!');
+    return;
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return;
+  }
 };
 
-export const deleteCache = async (key, data) => {
+export const deleteCache = async (key) => {
   const dataCache = await redisClient.get(key);
-  if (data._id === JSON.parse(dataCache._id)) return redisClient.del(key);
-  return 'Something went wrong!';
+  if (!dataCache) {
+    return 'Cache not found!';
+  }
+  try {
+    await redisClient.del(key);
+    console.log('Cache deleted successfully!');
+    return;
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return 'Error deleting cache!';
+  }
 };

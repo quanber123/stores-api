@@ -21,7 +21,7 @@ routerProduct
 routerProduct
   .route(`/api/products/:id`)
   .get(getProductById)
-  .put(updateProduct)
+  .put(uploadImg.array('images'), updateProduct)
   .delete(deleteProduct);
 routerProduct.route('/api/products_toggle_published/:id').put(publishedProduct);
 routerProduct.route('/api/products/favorite/:id').get(getFavoritesByProduct);

@@ -33,6 +33,7 @@ import routerCountry from './router/country/country.router.js';
 import routerCoupon from './router/product/coupon.router.js';
 import { setCampaign } from './middleware/cron.js';
 import { checkAndUpdateCoupon } from './controllers/product/coupons.controllers.js';
+import routerAdmin from './router/auth/admin/admin.router.js';
 config();
 connectRedis();
 connectDb();
@@ -74,12 +75,12 @@ app.use(
 );
 async function seedProductData() {
   const PRODUCTS = await Promise.all(
-    Array.from({ length: 50 }, generateFakeProduct)
+    Array.from({ length: 20 }, generateFakeProduct)
   );
   await productModel.create(PRODUCTS);
 }
 async function seedBlogData() {
-  const BLOGS = await Promise.all(Array.from({ length: 50 }, generateFakeBlog));
+  const BLOGS = await Promise.all(Array.from({ length: 20 }, generateFakeBlog));
   await blogModel.create(BLOGS);
 }
 // seedProductData()
@@ -115,6 +116,7 @@ app.use(routerPayment);
 app.use(routerFigures);
 app.use(routerStatusOrder);
 app.use(routerCountry);
+app.use(routerAdmin);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });

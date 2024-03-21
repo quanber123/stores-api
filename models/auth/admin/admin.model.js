@@ -19,6 +19,10 @@ const adminSchema = new mongoose.Schema({
     minLength: 8,
     required: true,
   },
+  image: {
+    type: String,
+    default: `${process.env.APP_URL}/public/avatar-trang.jpg`,
+  },
   role: {
     type: String,
     lowercase: true,
@@ -32,10 +36,6 @@ const adminSchema = new mongoose.Schema({
   updated_at: {
     type: Date,
     default: () => Date.now(),
-  },
-  default: {
-    type: Boolean,
-    default: false,
   },
 });
 

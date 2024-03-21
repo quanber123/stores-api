@@ -3,9 +3,9 @@ import cron from 'node-cron';
 export const setCampaign = (time, cb) => {
   const job = cron.schedule(
     time,
-    async () => {
+    () => {
       try {
-        await cb();
+        cb();
       } catch (error) {
         console.error('Error running sale campaign:', error);
       }

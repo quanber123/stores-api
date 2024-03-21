@@ -94,18 +94,60 @@ export const createBanner = async (req, res) => {
 
 export const updateBanner = async (req, res) => {
   const { id } = req.params;
-  const banner = req.body;
+  const { content, sub_content, category } = req.body;
+  const file = req.file;
+  let listImages = {
+    image: null,
+    imageLaptop: null,
+    imageTablet: null,
+    imageMobile: null,
+  };
   try {
-    const existingBanner = await bannerModel.findById(id);
-    if (existingBanner) {
-      return res.status(404).json({ message: `Not found Banner by id: ${id}` });
-    } else {
-      const updatedBanner = await bannerModel.findByIdAndUpdate({
-        _id: id,
-        banner,
+    if (file) {
+      const [
+        optimizedImgDesktop,
+        optimizedImgLaptop,
+        optimizedImgTablet,
+        optimizedImgMobile,
+      ] = await Promise.all([
+        optimizedImg(file, 1920, 950, 100),
+        optimizedImg(file, 1200, 700, 100),
+        optimizedImg(file, 600, 400, 100),
+        optimizedImg(file, 400, 400, 100),
+      ]);
+      if (
+        optimizedImgDesktop &&
+        optimizedImgLaptop &&
+        optimizedImgTablet &&
+        optimizedImgMobile
+      ) {
+        listImages.image = `${process.env.APP_URL}/${optimizedImgDesktop}`;
+        listImages.imageLaptop = `${process.env.APP_URL}/${optimizedImgLaptop}`;
+        listImages.imageTablet = `${process.env.APP_URL}/${optimizedImgTablet}`;
+        listImages.imageMobile = `${process.env.APP_URL}/${optimizedImgMobile}`;
+      }
+      const updated = await bannerModel.findByIdAndUpdate(id, {
+        content: content,
+        sub_content: sub_content,
+        category: category,
+        image: listImages.image,
+        imageLaptop: listImages.imageLaptop,
+        imageTablet: listImages.imageTablet,
+        imageMobile: listImages.imageMobile,
       });
-      return res.status(200).json(updatedBanner);
+
+      if (updated)
+        return res.status(200).json({ message: 'Updated successfully!' });
+    } else {
+      const updated = await bannerModel.findByIdAndUpdate(id, {
+        content: content,
+        sub_content: sub_content,
+        category: category,
+      });
+      if (updated)
+        return res.status(200).json({ message: 'Updated successfully!' });
     }
+    return res.status(404).json({ message: `Not found banner ${id}` });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

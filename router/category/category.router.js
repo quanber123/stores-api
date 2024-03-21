@@ -15,7 +15,7 @@ routerCategory
   .post(uploadImg.single('image'), createCategory);
 routerCategory
   .route('/api/categories/:id')
-  .put(updateCategory)
+  .put(uploadImg.single('image'), updateCategory)
   .delete(deleteCategory);
 
 export default routerCategory;
