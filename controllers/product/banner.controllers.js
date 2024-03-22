@@ -1,6 +1,7 @@
 import { redisClient } from '../../config/redis.js';
 import { optimizedImg } from '../../middleware/optimizedImg.js';
 import bannerModel from '../../models/product/banner.model.js';
+import adminModel from '../../models/auth/admin/admin.model.js';
 // Get All Banners
 
 export const getAllBanners = async (req, res) => {
