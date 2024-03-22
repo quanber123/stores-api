@@ -68,7 +68,6 @@ export const createCoupon = async (req, res) => {
   } = req.body;
   const file = req.file;
   const today = new Date();
-  i;
   const couponStartDate = new Date(startDate);
   const todayDate = today.getDate();
   const todayMonth = today.getMonth();
