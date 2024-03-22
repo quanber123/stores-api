@@ -9,13 +9,35 @@ import { totalPage } from '../../utils/totalPage.js';
 import { esClient } from '../../config/elasticsearch.js';
 import { checkCache, deleteCache, updateCache } from '../../modules/cache.js';
 import { redisClient } from '../../config/redis.js';
-import { docWithoutId } from '../../modules/elasticsearch.js';
+// import { docWithoutId } from '../../modules/elasticsearch.js';
 import { optimizedImg } from '../../middleware/optimizedImg.js';
 import adminModel from '../../models/auth/admin/admin.model.js';
+import jwt from 'jsonwebtoken';
+
 // Get all products
 export const getAllProducts = async (req, res) => {
+  const token = req.headers['authorization'];
+  const getToken = token?.split(' ')[1];
+  let user;
   const { category, tag, sort, search, page } = req.query;
+  let findAllProducts;
   try {
+    await jwt.verify(
+      getToken,
+      process.env.ACCESS_TOKEN_SECRET,
+      (err, decoded) => {
+        if (err) {
+          return res.status(403).json({ message: 'Token is not incorrect!' });
+        }
+        if (decoded) {
+          user = decoded;
+        }
+      }
+    );
+    const admin = await adminModel.findOne({
+      email: user.email,
+      role: user.role,
+    });
     let query = {};
     let sortQuery = {};
     const foundCategory = category
@@ -70,14 +92,25 @@ export const getAllProducts = async (req, res) => {
     }
     const totalProducts = await productModel.countDocuments(query);
     const total = Math.ceil(totalProducts / 8);
-    const findAllProducts = await productModel
-      .find(query)
-      .sort(sortQuery)
-      .populate(['details.category', 'details.tags'])
-      .populate('coupon')
-      .skip((page - 1) * 8)
-      .limit(8)
-      .lean();
+    if (admin) {
+      findAllProducts = await productModel
+        .find(query)
+        .sort(sortQuery)
+        .populate(['details.category', 'details.tags'])
+        .populate('coupon')
+        .skip((page - 1) * 8)
+        .limit(8)
+        .lean();
+    } else {
+      findAllProducts = await productModel
+        .find({ ...query, published: true })
+        .sort(sortQuery)
+        .populate(['details.category', 'details.tags'])
+        .populate('coupon')
+        .skip((page - 1) * 8)
+        .limit(8)
+        .lean();
+    }
     return res.status(200).json({
       products: findAllProducts ? findAllProducts : [],
       totalPage: total ? total : 0,
