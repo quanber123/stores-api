@@ -26,14 +26,14 @@ export const generateFakeProduct = async () => {
     quantity: faker.number.int({ min: 0, max: 50 }),
     inStock: quantity > 1 ? true : false,
   }));
-
+  const price = faker.number.int({ min: 10, max: 1000, precision: 0.01 });
   const fakeProduct = {
     name: faker.commerce.productName(),
     images: images,
-    price: faker.number.int({ min: 10, max: 1000, precision: 0.01 }),
+    price: price,
     sale: null,
     salePrice: 0,
-    finalPrice: 0,
+    finalPrice: price,
     details: {
       variants: variants,
       category: getRandomElements(category, 1)[0]._id,
