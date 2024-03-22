@@ -17,9 +17,15 @@ export const getAllBanners = async (req, res) => {
 // Create Banner
 
 export const createBanner = async (req, res) => {
+  const admin = req.decoded;
   const { content, sub_content, category } = req.body;
   const file = req.file;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     if (!file) return res.status(400).json({ message: 'No file uploaded!' });
     const countBanner = await bannerModel.countDocuments();
     if (countBanner > 3) {
@@ -93,6 +99,7 @@ export const createBanner = async (req, res) => {
 // Update Banner
 
 export const updateBanner = async (req, res) => {
+  const admin = req.decoded;
   const { id } = req.params;
   const { content, sub_content, category } = req.body;
   const file = req.file;
@@ -103,6 +110,11 @@ export const updateBanner = async (req, res) => {
     imageMobile: null,
   };
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     if (file) {
       const [
         optimizedImgDesktop,
@@ -156,8 +168,14 @@ export const updateBanner = async (req, res) => {
 // Delete Banner
 
 export const deleteBanner = async (req, res) => {
+  const admin = req.decoded;
   const { id } = req.params;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const existingBanner = await bannerModel.findById(id);
     if (existingBanner) {
       return res.status(404).json({ message: `Not found Banner by id: ${id}` });

@@ -17,13 +17,15 @@ routerProduct.use(json());
 routerProduct
   .route('/api/products')
   .get(getAllProducts)
-  .post(uploadImg.array('images'), createProduct);
+  .post(auth, uploadImg.array('images'), createProduct);
 routerProduct
   .route(`/api/products/:id`)
   .get(getProductById)
-  .put(uploadImg.array('images'), updateProduct)
-  .delete(deleteProduct);
-routerProduct.route('/api/products_toggle_published/:id').put(publishedProduct);
+  .put(auth, uploadImg.array('images'), updateProduct)
+  .delete(auth, deleteProduct);
+routerProduct
+  .route('/api/products_toggle_published/:id')
+  .put(auth, publishedProduct);
 routerProduct.route('/api/products/favorite/:id').get(getFavoritesByProduct);
 routerProduct.route('/api/products/reviews/:id').get(getReviews);
 routerProduct.route('/api/products/reviews').post(auth, reviewsProduct);

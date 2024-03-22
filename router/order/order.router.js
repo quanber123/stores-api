@@ -17,7 +17,7 @@ routerOrder
 routerOrder.route('/api/create-payment-cash').post(auth, createCashPayment);
 routerOrder.route('/api/user_orders').get(auth, getAllOrdersUser);
 routerOrder.route('/api/user_orders/:orderId').get(auth, getOrdersUserById);
-routerOrder.route('/api/user_orders/:orderId').put(updateOrder);
-routerOrder.route('/api/orders/users/:id').get(getAllOrdersByUsersId);
-routerOrder.route('/api/orders/:code').get(getOrderByCode);
+routerOrder.route('/api/user_orders/:orderId').put(auth, updateOrder);
+routerOrder.route('/api/orders/users/:id').get(auth, getAllOrdersByUsersId);
+routerOrder.route('/api/orders/:code').get(auth, getOrderByCode);
 export default routerOrder;

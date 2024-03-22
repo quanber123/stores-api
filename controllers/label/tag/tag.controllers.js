@@ -8,6 +8,8 @@ import {
 } from '../../../modules/cache.js';
 import productModel from '../../../models/product/product.model.js';
 import { productDeletionQueue } from '../../../config/queue.js';
+import adminModel from '../../../models/auth/admin/admin.model.js';
+
 // Get All Tags
 
 export const getAllTags = async (req, res) => {
@@ -29,19 +31,25 @@ export const getAllTags = async (req, res) => {
 // Create Tag
 
 export const createTag = async (req, res) => {
+  const admin = req.decoded;
   const tag = req.body;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const existingTag = await tagModel.findOne({
       name: tag.name,
     });
     if (existingTag) {
       return res.status(409).json({
-        message: `Tag name ${tag.name} already existed!`,
+        message: `Tag name ${tag} already existed!`,
       });
     } else {
       const newTag = new tagModel(tag);
       const savedTag = await newTag.save();
-      redisClient.setEx(`tags:${savedTag._id}`);
+      redisClient.set(`tags:${savedTag._id}`, JSON.stringify(savedTag));
       return res.status(200).json(savedTag);
     }
   } catch (error) {
@@ -54,7 +62,14 @@ export const createTag = async (req, res) => {
 export const updateTag = async (req, res) => {
   const { id } = req.params;
   const tag = req.body;
+  const admin = req.decoded;
+
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const updatedTag = await tagModel.findByIdAndUpdate(id, tag);
     if (!updatedTag) {
       return res.status(404).json({ message: `Not found Tag by id: ${id}` });
@@ -70,7 +85,14 @@ export const updateTag = async (req, res) => {
 // Delete Tag
 export const deleteTag = async (req, res) => {
   const { id } = req.params;
+  const admin = req.decoded;
+
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const deletedTag = await tagModel.findByIdAndDelete(id);
     if (!deletedTag) {
       return res.status(404).json({ message: `Not found Tag by id: ${id}` });

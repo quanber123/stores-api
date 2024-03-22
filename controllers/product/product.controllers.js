@@ -11,6 +11,7 @@ import { checkCache, deleteCache, updateCache } from '../../modules/cache.js';
 import { redisClient } from '../../config/redis.js';
 import { docWithoutId } from '../../modules/elasticsearch.js';
 import { optimizedImg } from '../../middleware/optimizedImg.js';
+import adminModel from '../../models/auth/admin/admin.model.js';
 // Get all products
 export const getAllProducts = async (req, res) => {
   const { category, tag, sort, search, page } = req.query;
@@ -341,6 +342,7 @@ export const getProductById = async (req, res) => {
 //   }
 // };
 export const createProduct = async (req, res) => {
+  const admin = req.decoded;
   const {
     name,
     description,
@@ -371,6 +373,11 @@ export const createProduct = async (req, res) => {
     },
   };
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     if (
       !name ||
       !description ||
@@ -421,12 +428,18 @@ export const createProduct = async (req, res) => {
 // Update Product
 
 export const updateProduct = async (req, res) => {
+  const admin = req.decoded;
   const { id } = req.params;
   const product = req.body;
   const files = req.files;
   let optimizationPromises = [];
   let optimizationResults;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     if (
       !product.name ||
       !product.description ||
@@ -546,8 +559,14 @@ export const updateProduct = async (req, res) => {
 //   }
 // };
 export const deleteProduct = async (req, res) => {
+  const admin = req.decoded;
   const { id } = req.params;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const deletedProduct = await productModel.findByIdAndDelete(id);
     if (deletedProduct) {
       await deleteCache(`products:${deletedProduct._id}`);
@@ -633,9 +652,15 @@ export const reviewsProduct = async (req, res) => {
 };
 
 export const publishedProduct = async (req, res) => {
+  const admin = req.decoded;
   const { id } = req.params;
   const { published } = req.body;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const updatedProduct = await productModel.findByIdAndUpdate(id, {
       published: published,
     });

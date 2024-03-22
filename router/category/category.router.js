@@ -12,10 +12,10 @@ routerCategory.use(json());
 routerCategory
   .route('/api/categories')
   .get(getAllCategories)
-  .post(uploadImg.single('image'), createCategory);
+  .post(auth, uploadImg.single('image'), createCategory);
 routerCategory
   .route('/api/categories/:id')
-  .put(uploadImg.single('image'), updateCategory)
-  .delete(deleteCategory);
+  .put(auth, uploadImg.single('image'), updateCategory)
+  .delete(auth, deleteCategory);
 
 export default routerCategory;

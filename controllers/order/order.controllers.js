@@ -2,7 +2,7 @@ import cartModel from '../../models/cart/cart.model.js';
 import orderModel from '../../models/order/order.model.js';
 import productModel from '../../models/product/product.model.js';
 import { payOs } from '../../utils/payos.js';
-
+import adminModel from '../../models/auth/admin/admin.model.js';
 export const createTransferLink = async (req, res) => {
   const { user } = req.decoded;
   const client_url = process.env.CLIENT_URL;

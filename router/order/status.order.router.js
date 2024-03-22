@@ -11,5 +11,7 @@ routerStatusOrder
   .route('/api/status-order')
   .get(getAllStatusOrder)
   .post(createStatusOrder);
-routerStatusOrder.route('/api/status-order/:id').delete(deleteStatusOrder);
+routerStatusOrder
+  .route('/api/status-order/:id')
+  .delete(auth, deleteStatusOrder);
 export default routerStatusOrder;

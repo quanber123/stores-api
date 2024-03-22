@@ -7,6 +7,7 @@ import categoryModel from '../../../models/category/category.model.js';
 import { redisClient } from '../../../config/redis.js';
 import { optimizedImg } from '../../../middleware/optimizedImg.js';
 import productModel from '../../../models/product/product.model.js';
+import adminModel from '../../../models/auth/admin/admin.model.js';
 // Get All Categories
 export const getAllCategories = async (req, res) => {
   let categories;
@@ -30,9 +31,15 @@ export const getAllCategories = async (req, res) => {
 // Create Category
 
 export const createCategory = async (req, res) => {
+  const admin = req.decoded;
   const { name, description } = req.body;
   const file = req.file;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     if (!file) return res.status(400).json({ message: 'No file uploaded!' });
     const existingCategory = await categoryModel
       .findOne({
@@ -75,12 +82,18 @@ export const createCategory = async (req, res) => {
 // Update Category
 
 export const updateCategory = async (req, res) => {
+  const admin = req.decoded;
   const { id } = req.params;
   const { name, description } = req.body;
   const file = req.file;
   let optimized;
   let optimizationResults;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     if (file) {
       optimized = await optimizedImg(file, 400, 300, 80);
       if (optimized) {
@@ -119,7 +132,14 @@ export const updateCategory = async (req, res) => {
 // Delete Category
 export const deleteCategory = async (req, res) => {
   const { id } = req.params;
+  const admin = req.decoded;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
+
     const deletedCategory = await categoryModel.findByIdAndDelete(id);
     if (!deletedCategory) {
       return res

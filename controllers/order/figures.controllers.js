@@ -3,8 +3,15 @@ import authUserModel from '../../models/auth/users/auth-user.model.js';
 import oauthUserModel from '../../models/auth/users/oauth-user.model.js';
 import orderModel from '../../models/order/order.model.js';
 import { format } from 'date-fns';
+import adminModel from '../../models/auth/admin/admin.model.js';
 export const getTotalAmount = async (req, res) => {
+  const admin = req.decoded;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const today = new Date();
     let yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
@@ -134,7 +141,13 @@ export const getTotalAmount = async (req, res) => {
 };
 
 export const getTotalFigures = async (req, res) => {
+  const admin = req.decoded;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const totalOrders = await orderModel.countDocuments();
     const pendingOrders = await orderModel.countDocuments({
       'paymentInfo.status': 'pending',
@@ -202,11 +215,17 @@ const getFiguresWeekly = (startDate, endDate, data) => {
   return result;
 };
 export const getWeeklyFigures = async (req, res) => {
+  const admin = req.decoded;
   const endDate = new Date();
   endDate.setHours(23, 59, 59, 999);
   const startDate = new Date();
   startDate.setDate(endDate.getDate() - 6);
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const totalSales = await orderModel.aggregate([
       {
         $match: {
@@ -288,10 +307,16 @@ export const getBestSellingProducts = async (req, res) => {
 };
 
 export const getAllOrders = async (req, res) => {
+  const admin = req.decoded;
   const { page, search, status, order_limits, method, start_date, end_date } =
     req.query;
   let query = {};
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     if (search) {
       const unaccentedQueryString = unidecode(search);
       const regex = new RegExp(unaccentedQueryString, 'i');
@@ -349,7 +374,13 @@ export const getAllOrders = async (req, res) => {
 };
 
 export const getAllCustomers = async (req, res) => {
+  const admin = req.decoded;
   try {
+    const auth = await adminModel.findOne({
+      email: admin.email,
+      role: admin.role,
+    });
+    if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const { page, search, type } = req.query;
     let query = {};
     let data;
