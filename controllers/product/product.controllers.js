@@ -35,8 +35,8 @@ export const getAllProducts = async (req, res) => {
       }
     );
     const admin = await adminModel.findOne({
-      email: user.email,
-      role: user.role,
+      email: user?.email,
+      role: user?.role,
     });
     let query = {};
     let sortQuery = {};
