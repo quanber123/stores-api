@@ -22,22 +22,17 @@ export const getAllProducts = async (req, res) => {
   const { category, tag, sort, search, page } = req.query;
   let findAllProducts;
   try {
-    await jwt.verify(
-      getToken,
-      process.env.ACCESS_TOKEN_SECRET,
-      (err, decoded) => {
-        if (err) {
-          return res.status(403).json({ message: 'Token is not incorrect!' });
-        }
-        if (decoded) {
-          user = decoded;
-        }
+    jwt.verify(getToken, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (decoded) {
+        user = decoded;
       }
-    );
-    const admin = await adminModel.findOne({
-      email: user?.email,
-      role: user?.role,
     });
+    const admin =
+      user &&
+      (await adminModel.findOne({
+        email: user?.email,
+        role: user?.role,
+      }));
     let query = {};
     let sortQuery = {};
     const foundCategory = category
