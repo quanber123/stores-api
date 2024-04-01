@@ -27,14 +27,12 @@ export const getUserByToken = async (req, res) => {
         existedAuthUser,
       ]);
       return {
-        user: {
-          _id: oauthUserResult?._id || authUserResult?._id,
-          id: oauthUserResult?.id || authUserResult?.id,
-          email: oauthUserResult?.email || authUserResult?.email,
-          name: oauthUserResult?.name || authUserResult?.name,
-          image: oauthUserResult?.image || authUserResult?.image,
-          isVerified: oauthUserResult?.isVerified || authUserResult?.isVerified,
-        },
+        _id: oauthUserResult?._id || authUserResult?._id,
+        id: oauthUserResult?.id || authUserResult?.id,
+        email: oauthUserResult?.email || authUserResult?.email,
+        name: oauthUserResult?.name || authUserResult?.name,
+        image: oauthUserResult?.image || authUserResult?.image,
+        isVerified: oauthUserResult?.isVerified || authUserResult?.isVerified,
       };
     });
     if (getUser !== null) {

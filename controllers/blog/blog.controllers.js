@@ -1,21 +1,37 @@
+import adminModel from '../../models/auth/admin/admin.model.js';
 import blogModel from '../../models/blog/blog.model.js';
 // import { esClient } from '../../config/elasticsearch.js';
 import { docWithoutId } from '../../modules/elasticsearch.js';
+import jwt from 'jsonwebtoken';
 export const getAllBlogs = async (req, res) => {
+  const token = req.headers['authorization'];
+  const getToken = token?.split(' ')[1];
+  let user;
   const { category, tag, page } = req.query;
   let query = {};
   try {
+    jwt.verify(getToken, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (decoded) {
+        user = decoded;
+      }
+    });
+    const admin =
+      user &&
+      (await adminModel.findOne({
+        email: user?.email,
+        role: user?.role,
+      }));
     const foundCategory = category
       ? await categoryModel.findOne({ name: category })
       : '';
     const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
-    if (foundCategory !== '' || foundTag !== '') {
-      if (foundCategory !== '') {
+    if (foundCategory || foundTag) {
+      if (foundCategory) {
         query = {
           categories: foundCategory?._id,
         };
       }
-      if (foundTag !== '') {
+      if (foundTag) {
         query = {
           tags: foundTag?._id,
         };

@@ -37,13 +37,13 @@ export const getAllProducts = async (req, res) => {
     let sortQuery = {};
     const foundCategory = category
       ? await categoryModel.findOne({ name: category })
-      : '';
-    const foundTag = tag ? await tagModel.findOne({ name: tag }) : '';
-    if (foundCategory !== '' || foundTag !== '') {
-      if (foundCategory !== '') {
+      : null;
+    const foundTag = tag ? await tagModel.findOne({ name: tag }) : null;
+    if (foundCategory || foundTag) {
+      if (foundCategory) {
         query['details.category'] = foundCategory?._id;
       }
-      if (foundTag !== '') {
+      if (foundTag) {
         query['details.tags'] = foundTag?._id;
       }
       if (foundCategory && foundTag) {
@@ -80,7 +80,7 @@ export const getAllProducts = async (req, res) => {
       default:
         break;
     }
-    if (search) {
+    if (search != 'null' && search) {
       const unaccentedQueryString = unidecode(search);
       const regex = new RegExp(unaccentedQueryString, 'i');
       query.name = { $regex: regex };
