@@ -1,7 +1,9 @@
 import adminModel from '../../models/auth/admin/admin.model.js';
 import blogModel from '../../models/blog/blog.model.js';
+import categoryModel from '../../models/category/category.model.js';
+import tagModel from '../../models/tag/tag.model.js';
 // import { esClient } from '../../config/elasticsearch.js';
-import { docWithoutId } from '../../modules/elasticsearch.js';
+// import { docWithoutId } from '../../modules/elasticsearch.js';
 import jwt from 'jsonwebtoken';
 export const getAllBlogs = async (req, res) => {
   const token = req.headers['authorization'];

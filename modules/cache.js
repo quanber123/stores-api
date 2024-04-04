@@ -35,6 +35,9 @@ export const checkCache = async (key, cb) => {
     return JSON.parse(data);
   } else {
     const freshData = await cb();
+    if (freshData !== null) {
+      await redisClient.set(key, JSON.stringify(freshData));
+    }
     return freshData;
   }
 };

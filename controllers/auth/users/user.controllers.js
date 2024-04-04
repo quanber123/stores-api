@@ -13,27 +13,24 @@ import { optimizedImg } from '../../../middleware/optimizedImg.js';
 
 //GET User by token
 export const getUserByToken = async (req, res) => {
-  const { user } = req.decoded;
   try {
+    const { user } = req.decoded;
+    if (!user.id) {
+      return res
+        .status(404)
+        .json({ message: `User id not found in the request` });
+    }
     const getUser = await checkCache(`users:${user.id}`, async () => {
-      const existedOauthUser = user.id
-        ? await oauthUserModel.findOne({ id: user.id }).lean()
-        : null;
-      const existedAuthUser = user.email
-        ? await authUserModel.findOne({ id: user.id }).lean()
-        : null;
-      const [oauthUserResult, authUserResult] = await Promise.all([
-        existedOauthUser,
-        existedAuthUser,
-      ]);
-      return {
-        _id: oauthUserResult?._id || authUserResult?._id,
-        id: oauthUserResult?.id || authUserResult?.id,
-        email: oauthUserResult?.email || authUserResult?.email,
-        name: oauthUserResult?.name || authUserResult?.name,
-        image: oauthUserResult?.image || authUserResult?.image,
-        isVerified: oauthUserResult?.isVerified || authUserResult?.isVerified,
-      };
+      const existedOauthUser = await oauthUserModel
+        .findOne({ id: user.id })
+        .lean();
+      if (existedOauthUser !== null) {
+        return existedOauthUser;
+      }
+      const existedAuthUser = await authUserModel
+        .findOne({ id: user.id })
+        .lean();
+      return existedAuthUser;
     });
     if (getUser !== null) {
       return res.status(200).json(getUser);
@@ -44,6 +41,7 @@ export const getUserByToken = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
 //User Login Auth
 export const userLogin = async (req, res) => {
   const { email, password } = req.body;
@@ -72,7 +70,6 @@ export const userLogin = async (req, res) => {
       });
       return res.status(200).json({
         accessToken: token,
-        user: user,
       });
     } else {
       return res.status(403).json({ message: 'Password is not incorrect!' });

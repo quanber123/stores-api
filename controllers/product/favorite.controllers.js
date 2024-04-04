@@ -35,7 +35,6 @@ export const postFavorites = async (req, res) => {
 
   try {
     const existedFavorites = await favoriteModel.findOne({ userId: user.id });
-
     if (!existedFavorites) {
       await favoriteModel.create({
         userId: user.id,
