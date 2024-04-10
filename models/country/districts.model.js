@@ -14,5 +14,7 @@ const districtsSchema = new mongoose.Schema({
     default: false,
   },
 });
+districtsSchema.indexes({ code: 1 });
+districtsSchema.indexes({ parent_code: 1 });
 
 export default mongoose.model('Districts', districtsSchema);

@@ -58,7 +58,6 @@ cartSchema.indexes({
   'product.color': 1,
   'product.size': 1,
 });
-cartSchema.indexes({ userId: 1 });
 cartSchema.pre('create', function (next) {
   console.log(this);
 });

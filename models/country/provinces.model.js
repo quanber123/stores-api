@@ -11,5 +11,5 @@ const provincesSchema = new mongoose.Schema({
     default: false,
   },
 });
-
+provincesSchema.indexes({ code: 1 });
 export default mongoose.model('Provinces', provincesSchema);

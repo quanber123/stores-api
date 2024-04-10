@@ -14,5 +14,6 @@ const wardsSchema = new mongoose.Schema({
     default: false,
   },
 });
-
+wardsSchema.indexes({ code: 1 });
+wardsSchema.indexes({ parent_code: 1 });
 export default mongoose.model('Wards', wardsSchema);

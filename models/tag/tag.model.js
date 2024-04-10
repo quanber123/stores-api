@@ -5,5 +5,5 @@ const tagSchema = new mongoose.Schema({
     lowercase: true,
   },
 });
-
+tagSchema.indexes({ name: 1 });
 export default mongoose.model('Tag', tagSchema);

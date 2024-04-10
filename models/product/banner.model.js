@@ -12,5 +12,5 @@ const bannerSchema = new mongoose.Schema({
     ref: 'Category',
   },
 });
-
+bannerSchema.indexes({ id: 1 });
 export default mongoose.model('Banner', bannerSchema);

@@ -9,4 +9,5 @@ const categorySchema = new mongoose.Schema({
   description: String,
 });
 categorySchema.index({ name: 1 });
+categorySchema.index({ id: 1 });
 export default mongoose.model('Category', categorySchema);

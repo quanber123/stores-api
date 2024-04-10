@@ -35,4 +35,5 @@ reviewsSchema.methods.calculateAverageRating = async function () {
   const averageRating = totalRating[0].totalRating / totalReviews;
   return Math.round(averageRating * 10) / 10;
 };
+reviewsSchema.indexes({ productId: 1 });
 export default mongoose.model('Reviews', reviewsSchema);
