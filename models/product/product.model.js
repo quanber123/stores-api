@@ -86,19 +86,10 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  // reviews: [
-  //   {
-  //     type: mongoose.SchemaTypes.ObjectId,
-  //     ref: 'Reviews',
-  //   },
-  // ],
 });
-// productSchema.pre('save', function (next) {
-//   if (this.sale && this.salePrice) {
-//     this.finalPrice = this.salePrice;
-//   } else {
-//     this.finalPrice = this.price;
-//   }
-//   next();
-// });
+productSchema.index({ name: 'text' });
+productSchema.index({ 'details.category': 1 });
+productSchema.index({ 'details.tags': 1 });
+productSchema.index({ 'details.category': 1, 'details.tags': 1, name: 'text' });
+productSchema.index({ 'details.category': 1, 'details.tags': 1 });
 export default mongoose.model('Product', productSchema);

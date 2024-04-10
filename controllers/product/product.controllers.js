@@ -83,7 +83,7 @@ export const getAllProducts = async (req, res) => {
     if (search != 'null' && search) {
       const unaccentedQueryString = unidecode(search);
       const regex = new RegExp(unaccentedQueryString, 'i');
-      query.name = { $regex: regex };
+      query.$text = { $search: regex };
     }
     const totalProducts = await productModel.countDocuments(query);
     const total = Math.ceil(totalProducts / 8);

@@ -32,28 +32,13 @@ const blogSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  comments: [
-    {
-      user: {
-        id: String,
-        image: String,
-        name: String,
-      },
-      text: String,
-      created_at: {
-        type: Date,
-        default: () => Date.now(),
-      },
-    },
-  ],
-
-  totalComments: {
-    type: Number,
-    default: 0,
+  published: {
+    type: Boolean,
+    default: true,
   },
 });
-blogSchema.pre('save', function (next) {
-  this.totalComments = this.comments.length;
-  next();
-});
+blogSchema.index({ categories: 1 });
+blogSchema.index({ tag: 1 });
+blogSchema.index({ author: 1 });
+blogSchema.index({ categories: 1, tag: 1 });
 export default mongoose.model('Blog', blogSchema);

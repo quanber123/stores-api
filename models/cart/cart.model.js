@@ -51,4 +51,15 @@ const cartSchema = new mongoose.Schema({
     default: () => Date.now(),
   },
 });
+cartSchema.indexes({ userId: 1 });
+cartSchema.indexes({
+  userId: 1,
+  'product.name': 1,
+  'product.color': 1,
+  'product.size': 1,
+});
+cartSchema.indexes({ userId: 1 });
+cartSchema.pre('create', function (next) {
+  console.log(this);
+});
 export default mongoose.model('Cart', cartSchema);

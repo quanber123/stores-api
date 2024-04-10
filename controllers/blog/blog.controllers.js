@@ -1,5 +1,6 @@
 import adminModel from '../../models/auth/admin/admin.model.js';
 import blogModel from '../../models/blog/blog.model.js';
+import commentModel from '../../models/blog/comment.model.js';
 import categoryModel from '../../models/category/category.model.js';
 import tagModel from '../../models/tag/tag.model.js';
 // import { esClient } from '../../config/elasticsearch.js';
@@ -115,34 +116,28 @@ export const getAllBlogs = async (req, res) => {
 export const getBlogById = async (req, res) => {
   const { id } = req.params;
   try {
-    const [existedBlog, relatedBlogs] = await Promise.all([
-      blogModel
-        .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
-        .populate(['categories', 'tags'])
-        .lean(),
-      // blogModel
-      //   .find({ _id: { $ne: id } })
-      //   .sort({ created_at: -1 })
-      //   .populate(['categories', 'tags'])
-      //   .populate({
-      //     path: 'comments.user',
-      //     model: 'AuthUser',
-      //   })
-      //   .populate({
-      //     path: 'comments.user',
-      //     model: 'OauthUser',
-      //   })
-      //   .limit(4)
-      //   .lean(),
-    ]);
+    const existedBlog = await blogModel
+      .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
+      .populate(['categories', 'tags'])
+      .lean();
+    // blogModel
+    //   .find({ _id: { $ne: id } })
+    //   .sort({ created_at: -1 })
+    //   .populate(['categories', 'tags'])
+    //   .populate({
+    //     path: 'comments.user',
+    //     model: 'AuthUser',
+    //   })
+    //   .populate({
+    //     path: 'comments.user',
+    //     model: 'OauthUser',
+    //   })
+    //   .limit(4)
+    //   .lean(),
 
     if (!existedBlog) {
       return res.status(404).json({ message: 'Blog not exist!' });
     }
-    existedBlog.comments?.sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    );
-
     return res.status(200).json({ blog: existedBlog });
   } catch (error) {
     console.log(error);
@@ -210,21 +205,45 @@ export const createBlog = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+export const getAllComments = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const existedComment = await commentModel
+      .findOne({ blogId: id })
+      .populate('blogId');
+    return res.status(200).json(existedComment || {});
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 export const postComment = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
   const { user } = req.decoded;
   const { text } = req.body;
   try {
     let comment = {
       user: {
-        id: user.id,
-        image: user.image,
         name: user.name,
+        image: user.image,
       },
       text,
       created_at: new Date(),
     };
+    const duplicatedBlog = await commentModel.findOne({ blogId: id });
+    if (duplicatedBlog) {
+      await commentModel.findOneAndUpdate(
+        { blogId: id },
+        {
+          $push: { comments: comment },
+        }
+      );
+    } else {
+      await commentModel.create({
+        blogId: id,
+        comments: [comment],
+      });
+    }
+    await commentModel.createIndexes({ blogId: 1 });
     // await esClient.update({
     //   index: 'blogs',
     //   id: id,
@@ -241,14 +260,8 @@ export const postComment = async (req, res) => {
     // const data = await esClient.get({
     //   index: 'blogs',
     //   id: id,
-    // });
-    await blogModel.findByIdAndUpdate(
-      id,
-      { $push: { comments: comment } },
-      { new: true }
-    );
-
-    return res.status(201).json({ message: 'Post comment successfully!' });
+    // })
+    return res.status(200).json({ message: 'Post comment successfully!' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

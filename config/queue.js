@@ -11,7 +11,6 @@ productDeletionQueue.process(async (job) => {
   await productModel.findByIdAndDelete(productId);
   await redisClient.del(`products:${productId}`);
 });
-
 productDeletionQueue.on('completed', (job, result) => {
   console.log(`Job completed for product ${job.data.productId}`);
 });

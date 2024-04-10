@@ -4,6 +4,7 @@ import { auth } from '../../middleware/auth.js';
 import {
   createBlog,
   getAllBlogs,
+  getAllComments,
   getBlogById,
   postComment,
 } from '../../controllers/blog/blog.controllers.js';
@@ -11,5 +12,8 @@ const routerBlog = Router();
 routerBlog.use(json());
 routerBlog.route('/api/blogs').get(getAllBlogs).post(createBlog);
 routerBlog.route(`/api/blogs/:id`).get(getBlogById);
-routerBlog.route(`/api/blogs/:id/comments`).post(auth, postComment);
+routerBlog
+  .route(`/api/blogs/:id/comments`)
+  .get(getAllComments)
+  .post(auth, postComment);
 export default routerBlog;
