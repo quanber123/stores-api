@@ -106,6 +106,22 @@ export const updateCart = async (req, res) => {
         message: `Product '${deleteProduct.product.name}' now is not in your cart!`,
       });
     }
+    const checkUnAvailable = await productModel.findOne(
+      {
+        _id: product.id,
+        'details.variants.color': product.color,
+        'details.variants.size': product.size,
+      },
+      {
+        'details.variants.$': 1,
+      }
+    );
+    if (checkUnAvailable.details.variants[0].quantity < product.quantity) {
+      return res.status(404).json({
+        message: `The quantity has exceeded the product inventory by ${checkUnAvailable.details.variants[0].quantity}`,
+        data: checkUnAvailable,
+      });
+    }
     const newProduct = {
       ...product,
       totalPrice: product.finalPrice * product.quantity,
