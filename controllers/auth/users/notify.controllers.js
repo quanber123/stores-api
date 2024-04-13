@@ -6,6 +6,7 @@ import { firstLoadingCache } from '../../../modules/cache.js';
 export const getAllNotifications = async (req, res) => {
   try {
     const data = await firstLoadingCache(`notifications:*`, notifyModel, []);
+
     return res.status(200).json({ notifications: data !== null ? data : [] });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -14,6 +15,7 @@ export const getAllNotifications = async (req, res) => {
 
 export const createNotify = async (req, res) => {
   const { type, description } = req.body;
+
   try {
     const existedNotify = await notifyModel.findOne({
       type: type,
@@ -27,6 +29,7 @@ export const createNotify = async (req, res) => {
       type: type,
       description: description,
     });
+
     await redisClient.set(`notifications:${newNotify._id}`);
     const updatedSettings = await settingsModel.updateMany(
       { user: { $exists: true } },
@@ -53,6 +56,7 @@ export const createNotify = async (req, res) => {
 
 export const updateNotify = async (req, res) => {
   const { id, description } = req.body;
+
   try {
     const updateNotify = await notifyModel.findByIdAndUpdate(
       id,
@@ -61,6 +65,7 @@ export const updateNotify = async (req, res) => {
       },
       { new: true }
     );
+
     if (updateNotify) {
       await redisClient.set(`notifications:${updateNotify._id}`);
       return res.status(200).json({ message: 'Updated Successfully!' });
@@ -75,8 +80,10 @@ export const updateNotify = async (req, res) => {
 
 export const deleteNotify = async (req, res) => {
   const { id } = req.body;
+
   try {
     const deletedNotify = await notifyModel.findByIdAndDelete(id);
+
     if (deletedNotify)
       return res.status(200).json({ message: 'Deleted Successfully!' });
     return res

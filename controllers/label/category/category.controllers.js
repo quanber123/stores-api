@@ -34,6 +34,7 @@ export const createCategory = async (req, res) => {
   const admin = req.decoded;
   const { name, description } = req.body;
   const file = req.file;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -64,6 +65,7 @@ export const createCategory = async (req, res) => {
     }
     const newCategory = new categoryModel(category);
     const savedCategory = await newCategory.save();
+
     if (savedCategory) {
       await redisClient.set(
         `categories:${savedCategory._id}`,
@@ -88,6 +90,7 @@ export const updateCategory = async (req, res) => {
   const file = req.file;
   let optimized;
   let optimizationResults;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -117,6 +120,7 @@ export const updateCategory = async (req, res) => {
       name: name,
       description: description,
     });
+
     if (updatedCategory) {
       await updateCache(`categories:${updatedCategory._id}`, updatedCategory);
       return res
@@ -159,5 +163,6 @@ export const deleteCategory = async (req, res) => {
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  } finally {
   }
 };

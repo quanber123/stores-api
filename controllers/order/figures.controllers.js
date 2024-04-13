@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import adminModel from '../../models/auth/admin/admin.model.js';
 export const getTotalAmount = async (req, res) => {
   const admin = req.decoded;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -137,11 +138,13 @@ export const getTotalAmount = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error' });
+  } finally {
   }
 };
 
 export const getTotalFigures = async (req, res) => {
   const admin = req.decoded;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -164,6 +167,7 @@ export const getTotalFigures = async (req, res) => {
       processingOrders,
       deliveredOrders,
     ]);
+
     return res.status(200).json({
       totalOrders: total,
       pendingOrders: pending,
@@ -220,6 +224,7 @@ export const getWeeklyFigures = async (req, res) => {
   endDate.setHours(23, 59, 59, 999);
   const startDate = new Date();
   startDate.setDate(endDate.getDate() - 6);
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -300,6 +305,7 @@ export const getBestSellingProducts = async (req, res) => {
         },
       },
     ]);
+
     return res.status(200).json(data ? data : []);
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error' });
@@ -311,6 +317,7 @@ export const getAllOrders = async (req, res) => {
   const { page, search, status, order_limits, method, start_date, end_date } =
     req.query;
   let query = {};
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -367,6 +374,7 @@ export const getAllOrders = async (req, res) => {
       .sort({ created_at: -1 })
       .skip((page - 1) * 10)
       .limit(10);
+
     return res.status(200).json({ orders: data || [], totalPage: totalPage });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -375,6 +383,7 @@ export const getAllOrders = async (req, res) => {
 
 export const getAllCustomers = async (req, res) => {
   const admin = req.decoded;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -409,6 +418,7 @@ export const getAllCustomers = async (req, res) => {
         .limit(10);
       total = Math.ceil(totalUsers / 10);
     }
+
     return res
       .status(200)
       .json({ users: data !== null ? data : [], totalPage: total });

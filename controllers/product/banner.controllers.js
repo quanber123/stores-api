@@ -7,6 +7,7 @@ import adminModel from '../../models/auth/admin/admin.model.js';
 export const getAllBanners = async (req, res) => {
   try {
     const findAllBanners = await bannerModel.find().populate('category').lean();
+
     if (findAllBanners) {
       return res.status(200).json(findAllBanners);
     }
@@ -21,6 +22,7 @@ export const createBanner = async (req, res) => {
   const admin = req.decoded;
   const { content, sub_content, category } = req.body;
   const file = req.file;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -110,6 +112,7 @@ export const updateBanner = async (req, res) => {
     imageTablet: null,
     imageMobile: null,
   };
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -148,15 +151,15 @@ export const updateBanner = async (req, res) => {
         imageTablet: listImages.imageTablet,
         imageMobile: listImages.imageMobile,
       });
-
-      if (updated)
-        return res.status(200).json({ message: 'Updated successfully!' });
+      if (updated);
+      return res.status(200).json({ message: 'Updated successfully!' });
     } else {
       const updated = await bannerModel.findByIdAndUpdate(id, {
         content: content,
         sub_content: sub_content,
         category: category,
       });
+
       if (updated)
         return res.status(200).json({ message: 'Updated successfully!' });
     }

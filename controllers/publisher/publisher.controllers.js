@@ -12,6 +12,7 @@ export const getAllPublishers = async (req, res) => {
       .skip((page - 1) * publishers)
       .limit(publishers)
       .lean();
+
     if (findAllPublishers) {
       return res
         .status(200)
@@ -26,6 +27,7 @@ export const getAllPublishers = async (req, res) => {
 
 export const createPublisher = async (req, res) => {
   const publisher = req.body;
+
   try {
     const existingPublisher = await publisherModel
       .findOne({
@@ -39,6 +41,7 @@ export const createPublisher = async (req, res) => {
     } else {
       const newPublisher = new publisherModel(publisher);
       const savedPublisher = await newPublisher.save();
+
       return res.status(200).json(savedPublisher);
     }
   } catch (error) {
@@ -62,6 +65,7 @@ export const updatePublisher = async (req, res) => {
         _id: id,
         publisher,
       });
+
       return res.status(200).json(updatedPublisher);
     }
   } catch (error) {
@@ -81,6 +85,7 @@ export const deletePublisher = async (req, res) => {
         .json({ message: `Not found publisher by id: ${id}` });
     } else {
       const deletedPublisher = await publisherModel.findByIdAndDelete(id);
+
       return res.status(200).json(deletedPublisher);
     }
   } catch (error) {

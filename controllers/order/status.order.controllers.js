@@ -22,12 +22,13 @@ export const getAllStatusOrder = async (req, res) => {
 
 export const createStatusOrder = async (req, res) => {
   const status = req.body;
+
   try {
     const existedStatus = await statusOrderModel.findOne({ name: status.name });
     if (existedStatus) {
       return res
         .status(409)
-        .json({ message: `Store name ${status.name} was existed!` });
+        .json({ message: `Status name ${status.name} was existed!` });
     } else {
       const newStatus = new statusOrderModel(status);
       const savedStatus = await newStatus.save();
@@ -44,6 +45,7 @@ export const createStatusOrder = async (req, res) => {
 
 export const deleteStatusOrder = async (req, res) => {
   const { id } = req.params;
+
   try {
     const deletedStatus = await statusOrderModel.findByIdAndDelete(id);
     if (deletedStatus) {

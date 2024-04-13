@@ -6,7 +6,6 @@ import orderModel from '../../models/order/order.model.js';
 import reviewsModel from '../../models/product/reviews.model.js';
 import { hidePartialUsername } from '../../utils/validate.js';
 import { totalPage } from '../../utils/totalPage.js';
-import { esClient } from '../../config/elasticsearch.js';
 import { checkCache, deleteCache, updateCache } from '../../modules/cache.js';
 import { redisClient } from '../../config/redis.js';
 // import { docWithoutId } from '../../modules/elasticsearch.js';
@@ -203,6 +202,7 @@ export const getAllProducts = async (req, res) => {
 // Get product by id
 export const getProductById = async (req, res) => {
   const { id } = req.params;
+
   try {
     const data = await checkCache(`products:${id}`, async () => {
       const product = await productModel
@@ -223,7 +223,6 @@ export const getProductById = async (req, res) => {
       .populate('coupon')
       .lean()
       .limit(8);
-
     if (!data) {
       return res.status(404).json({ message: `Not found by id ${id}` });
     } else {
@@ -400,6 +399,7 @@ export const createProduct = async (req, res) => {
       category: category,
     },
   };
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -440,6 +440,7 @@ export const createProduct = async (req, res) => {
     product.images.push(...imageUrls);
     const newProduct = new productModel(product);
     const savedProduct = await newProduct.save();
+
     if (savedProduct) {
       await redisClient.set(
         `products:${savedProduct._id}`,
@@ -462,6 +463,7 @@ export const updateProduct = async (req, res) => {
   const files = req.files;
   let optimizationPromises = [];
   let optimizationResults;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -513,6 +515,7 @@ export const updateProduct = async (req, res) => {
       updated_at: new Date(),
     };
     const updatedProduct = await productModel.findByIdAndUpdate(id, update);
+
     if (updatedProduct) {
       await updateCache(`products:${updatedProduct._id}`, updatedProduct);
       return res
@@ -589,6 +592,7 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   const admin = req.decoded;
   const { id } = req.params;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -646,6 +650,7 @@ export const getReviews = async (req, res) => {
 export const reviewsProduct = async (req, res) => {
   const { user } = req.decoded;
   const { rate, reviews, showUser, productId, orderId } = req.body;
+
   try {
     const newReviews = new reviewsModel({
       productId: productId,
@@ -670,6 +675,7 @@ export const reviewsProduct = async (req, res) => {
       },
       { new: true }
     );
+
     if (updateOrders) {
       return res.status(200).json({ message: 'Reviews Successfully!' });
     }
@@ -683,6 +689,7 @@ export const publishedProduct = async (req, res) => {
   const admin = req.decoded;
   const { id } = req.params;
   const { published } = req.body;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,

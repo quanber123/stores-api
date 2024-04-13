@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 const orderSchema = new mongoose.Schema({
   user: String,
   paymentMethod: String,
+  isPaid: {
+    type: Boolean,
+    default: false,
+  },
   paymentInfo: {
     user_name: String,
     phone: Number,
@@ -104,4 +108,5 @@ const orderSchema = new mongoose.Schema({
     default: () => Date.now(),
   },
 });
+orderSchema.indexes({ user: 1 });
 export default mongoose.model('Order', orderSchema);

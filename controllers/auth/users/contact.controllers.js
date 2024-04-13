@@ -3,12 +3,14 @@ import { sendMailToAdmin } from '../../../utils/sendEmail.js';
 
 export const getAllContacts = async (req, res) => {
   const { page } = req.query;
+
   try {
     const getAllContacts = await contactModel
       .find()
       .skip((page - 1) * 10)
       .limit(10)
       .lean();
+
     return res.status(200).json({
       contacts: getAllContacts !== null ? getAllContacts : [],
       currPage: page,

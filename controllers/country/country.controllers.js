@@ -8,6 +8,7 @@ export const getAllProvinces = async (req, res) => {
   try {
     const data = await checkCache('provinces:get_all', async () => {
       const provinces = await provincesModel.find().lean();
+
       await redisClient.set(`provinces:get_all`, JSON.stringify(provinces));
       return provinces;
     });
@@ -21,6 +22,7 @@ export const getAllDistricts = async (req, res) => {
   try {
     const data = await checkCache('districts:get_all', async () => {
       const districts = await districtsModel.find().lean();
+
       await redisClient.set(`districts:get_all`, JSON.stringify(districts));
       return districts;
     });
@@ -34,6 +36,7 @@ export const getAllWards = async (req, res) => {
   try {
     const data = await checkCache('wards:get_all', async () => {
       const wards = await wardsModel.find().lean();
+
       await redisClient.set(`wards:get_all`, JSON.stringify(wards));
       return wards;
     });
@@ -45,12 +48,12 @@ export const getAllWards = async (req, res) => {
 
 export const getDistrictsByProvince = async (req, res) => {
   const { provinceCode } = req.query;
-  console.log(provinceCode);
   try {
     const data = await checkCache(`provinces:${provinceCode}`, async () => {
       const districts = await districtsModel.find({
         parent_code: provinceCode,
       });
+
       await redisClient.set(
         `provinces:${provinceCode}`,
         JSON.stringify(districts)
@@ -65,9 +68,11 @@ export const getDistrictsByProvince = async (req, res) => {
 
 export const getWadsByDistrict = async (req, res) => {
   const { districtCode } = req.query;
+
   try {
     const data = await checkCache(`districts:${districtCode}`, async () => {
       const wards = await wardsModel.find({ parent_code: districtCode }).lean();
+
       await redisClient.set(`wards:${districtCode}`, JSON.stringify(wards));
       return wards;
     });

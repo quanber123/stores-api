@@ -6,6 +6,7 @@ export const getAllAddress = async (req, res) => {
     const address = await addressModel
       .find({ userId: user.id })
       .sort({ isDefault: -1 });
+
     if (address) return res.status(200).json(address);
     return res.status(404).json({ message: 'Not found addresses!' });
   } catch (error) {
@@ -15,6 +16,7 @@ export const getAllAddress = async (req, res) => {
 export const createAddress = async (req, res) => {
   const { user } = req.decoded;
   const { name, phone, state, city, district, address, isDefault } = req.body;
+
   try {
     if (!state || !city || !district || !address)
       return res
@@ -88,6 +90,7 @@ export const updateAddress = async (req, res) => {
 
 export const deleteAddress = async (req, res) => {
   const { id } = req.params;
+
   try {
     const deletedAddress = await addressModel.findByIdAndDelete(id);
     if (deletedAddress)

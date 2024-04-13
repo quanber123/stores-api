@@ -32,6 +32,7 @@ export const getUserByToken = async (req, res) => {
         .lean();
       return existedAuthUser;
     });
+
     if (getUser !== null) {
       return res.status(200).json(getUser);
     } else {
@@ -45,6 +46,7 @@ export const getUserByToken = async (req, res) => {
 //User Login Auth
 export const userLogin = async (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password) {
     return res
       .status(400)
@@ -52,6 +54,7 @@ export const userLogin = async (req, res) => {
   }
   try {
     const findUser = await authUserModel.findOne({ email: email }).lean();
+
     if (!findUser)
       return res.status(404).json({ message: 'Account not register!' });
     const match = await bcrypt.compare(password, findUser.password);
@@ -82,6 +85,7 @@ export const userLogin = async (req, res) => {
 // User Register Auth
 export const userRegister = async (req, res) => {
   const { name, email, password } = req.body;
+
   try {
     const duplicatedOauthUser = await authUserModel.findOne({
       email: email,
@@ -102,6 +106,7 @@ export const userRegister = async (req, res) => {
       isVerified: false,
     });
     await user.save();
+
     const token = jwt.sign(
       {
         user: user,
@@ -129,6 +134,7 @@ export const userRegister = async (req, res) => {
 };
 export const verifiedAccount = async (req, res) => {
   const { email, code } = req.body;
+
   try {
     const user = await authUserModel.findOne({
       email: email,
@@ -142,6 +148,7 @@ export const verifiedAccount = async (req, res) => {
         user: user.id,
         notifications: [...allSettingsNotify],
       });
+
       const responseUser = {
         _id: user._id,
         id: user.id,
@@ -171,6 +178,7 @@ export const verifiedAccount = async (req, res) => {
 };
 export const sendCodeVerifiedAccount = async (req, res) => {
   const { email } = req.body;
+
   try {
     const existedAuthEmail = await authUserModel.findOne({
       email: email,
@@ -182,6 +190,7 @@ export const sendCodeVerifiedAccount = async (req, res) => {
       email: email,
       verificationCode: verificationCode,
     });
+
     await sendVerificationEmail(email, verificationCode);
     return res
       .status(200)
@@ -192,6 +201,7 @@ export const sendCodeVerifiedAccount = async (req, res) => {
 };
 export const updateProfile = async (req, res) => {
   const { id, name, value } = req.body;
+
   try {
     if (!value) {
       return res.status(400).json({ message: `${name} is required!` });
@@ -220,6 +230,7 @@ export const updateAvatar = async (req, res) => {
   const { id } = req.params;
   const file = req.file;
   let updateOptions;
+
   try {
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded!' });
@@ -259,9 +270,11 @@ export const updateAvatar = async (req, res) => {
 
 export const getAllSettings = async (req, res) => {
   const { id } = req.params;
+
   try {
     const data = await checkCache(`settings:${id}`, async () => {
       const existedSettings = await settingsModel.findOne({ user: id }).lean();
+
       if (existedSettings) {
         await redisClient.set(
           `settings:${id}`,
@@ -289,6 +302,7 @@ export const toggleNotifications = async (req, res) => {
         new: true,
       }
     );
+
     if (updatedSettings) {
       await redisClient.set(`settings:${id}`, JSON.stringify(updatedSettings));
       return res.status(200).json({ message: 'Updated Successfully!' });

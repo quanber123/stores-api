@@ -35,8 +35,8 @@ import { setCampaign } from './middleware/cron.js';
 import { checkAndUpdateCoupon } from './controllers/product/coupons.controllers.js';
 import routerAdmin from './router/auth/admin/admin.router.js';
 config();
-connectRedis();
 connectDb();
+connectRedis();
 //connectElasticSearch();
 // firstLoadingElasticSearch(
 //   ['products', 'blogs'],
@@ -89,14 +89,14 @@ async function seedBlogData() {
 //   })
 //   .catch((error) => {
 //     console.error('Error seeding data:', error.message);
-//   });
+//   })
 // seedBlogData()
 //   .then(() => {
 //     console.log('Data seeded successfully.');
 //   })
 //   .catch((error) => {
 //     console.error('Error seeding data:', error.message);
-//   });
+//   })
 setCampaign('0 0 * * * *', checkAndUpdateCoupon);
 app.use(passport.initialize());
 app.use(passport.session());

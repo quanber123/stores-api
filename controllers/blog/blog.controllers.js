@@ -55,6 +55,7 @@ export const getAllBlogs = async (req, res) => {
       .skip((page - 1) * 8)
       .limit(8)
       .lean();
+
     return res.status(200).json({
       blogs: findAllBlogs ? findAllBlogs : [],
       totalPage: total ? total : 0,
@@ -115,6 +116,7 @@ export const getAllBlogs = async (req, res) => {
 
 export const getBlogById = async (req, res) => {
   const { id } = req.params;
+
   try {
     const existedBlog = await blogModel
       .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
@@ -187,6 +189,7 @@ export const getBlogById = async (req, res) => {
 
 export const createBlog = async (req, res) => {
   const blog = req.body;
+
   try {
     const newBlog = await blogModel.findOne({ title: blog.title });
     if (newBlog) {
@@ -199,6 +202,7 @@ export const createBlog = async (req, res) => {
       //   id: savedBlog._id,
       //   document: docWithoutId(savedBlog),
       // });
+
       return res.status(200).json({ message: 'Create Successfully!' });
     }
   } catch (error) {
@@ -211,6 +215,7 @@ export const getAllComments = async (req, res) => {
     const existedComment = await commentModel
       .findOne({ blogId: id })
       .populate('blogId');
+
     return res.status(200).json(existedComment || {});
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -220,6 +225,7 @@ export const postComment = async (req, res) => {
   const { id } = req.params;
   const { user } = req.decoded;
   const { text } = req.body;
+
   try {
     let comment = {
       user: {
@@ -243,7 +249,7 @@ export const postComment = async (req, res) => {
         comments: [comment],
       });
     }
-    await commentModel.createIndexes({ blogId: 1 });
+
     // await esClient.update({
     //   index: 'blogs',
     //   id: id,

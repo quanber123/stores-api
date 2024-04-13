@@ -23,7 +23,8 @@ export const generateFakeProduct = async () => {
   const variants = Array.from({ length: numberOfVariants }, () => ({
     size: getRandomElements(sizes, 1)[0],
     color: faker.color.human(),
-    quantity: faker.number.int({ min: 0, max: 50 }),
+    quantity: quantity,
+    availableQuantity: quantity,
     inStock: quantity > 1 ? true : false,
   }));
   const price = faker.number.int({ min: 10, max: 1000, precision: 0.01 });

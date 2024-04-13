@@ -15,6 +15,11 @@ const variantSchema = new mongoose.Schema({
     default: 0,
     required: true,
   },
+  availableQuantity: {
+    type: Number,
+    default: 0,
+    required: true,
+  },
   inStock: {
     type: Boolean,
     default: true,

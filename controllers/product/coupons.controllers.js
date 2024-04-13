@@ -5,6 +5,7 @@ import productModel from '../../models/product/product.model.js';
 
 export const getAllCoupons = async (req, res) => {
   const { page } = req.query;
+
   try {
     const totalCoupons = await couponModel.countDocuments();
     const totalPage = Math.ceil(totalCoupons / 10);
@@ -103,8 +104,9 @@ export const createCoupon = async (req, res) => {
         .json({ message: 'Day created can not less than today!' });
     }
     const duplicatedCoupon = await couponModel.findOne({ name: coupon.name });
-    if (duplicatedCoupon)
+    if (duplicatedCoupon) {
       return res.status(409).json({ message: 'This sale already existed!' });
+    }
     const optimized = await optimizedImg(file, 800, 800, 80);
     if (optimized) {
       coupon.image = `${process.env.APP_URL}/${optimized}`;
@@ -119,11 +121,13 @@ export const createCoupon = async (req, res) => {
         updateProductsForSale(savedCoupon)
       );
     }
+
     res
       .status(201)
       .json({ message: 'Coupon created successfully', savedCoupon });
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  } finally {
   }
 };
 const disabledCoupon = async (coupon) => {

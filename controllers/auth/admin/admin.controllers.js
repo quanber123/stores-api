@@ -15,6 +15,7 @@ export const adminLogin = async (req, res) => {
   const { email, password } = req.body;
   try {
     const data = await adminModel.findOne({ email: email });
+
     if (!data)
       return res.status(404).json({ message: 'Account not register!' });
 

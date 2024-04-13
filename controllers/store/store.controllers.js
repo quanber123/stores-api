@@ -22,6 +22,7 @@ export const getAllStores = async (req, res) => {
 
 export const createStore = async (req, res) => {
   const store = req.body;
+
   try {
     const existingStore = await storeModel.findOne({ name: store.name });
     if (existingStore) {
@@ -31,6 +32,7 @@ export const createStore = async (req, res) => {
     } else {
       const newStore = new storeModel(store);
       const savedStore = await newStore.save();
+
       await redisClient.set(
         `stores:${savedStore._id}`,
         JSON.stringify(savedStore)
@@ -47,8 +49,10 @@ export const createStore = async (req, res) => {
 export const updateStore = async (req, res) => {
   const { id } = req.params.id;
   const store = req.body;
+
   try {
     const updatedStore = await storeModel.findByIdAndUpdate(id, store);
+
     if (updatedStore) {
       await redisClient.set(
         `stores:${updateStore._id}`,
@@ -67,8 +71,10 @@ export const updateStore = async (req, res) => {
 
 export const deleteStore = async (req, res) => {
   const { id } = req.params.id;
+
   try {
     const deletedStore = await storeModel.findByIdAndDelete(id);
+
     if (deletedStore) {
       await redisClient.del(`stores:${deletedStore._id}`);
       return res.status(200).json({ message: 'Deleted Successfully!' });

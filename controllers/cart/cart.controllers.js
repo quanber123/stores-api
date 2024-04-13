@@ -14,6 +14,7 @@ export const getAllCarts = async (req, res) => {
       // .skip(skip)
       // .limit(8)
       .lean();
+
     return res.status(200).json({ cart: existedProducts, total: total });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -40,6 +41,7 @@ export const createCart = async (req, res) => {
       totalPrice: 0,
     },
   };
+
   try {
     if (!cart || !cart.name || !cart.color || !cart.size) {
       return res.status(400).json({ message: 'Invalid product information' });
@@ -89,16 +91,17 @@ export const createCart = async (req, res) => {
       newCart.product['totalPrice'] = cart.price * cart.quantity;
     }
     await cartModel.create(newCart);
-    await cartModel.createIndexes({ userId: 1 });
     return res.status(200).json({ message: 'Created Successfully!' });
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  } finally {
   }
 };
 
 export const updateCart = async (req, res) => {
   const id = req.params.id;
   const { product } = req.body;
+
   try {
     if (product.quantity === 0) {
       const deleteProduct = await cartModel.findByIdAndDelete(id);
@@ -129,6 +132,7 @@ export const updateCart = async (req, res) => {
     const updatedProduct = await cartModel.findByIdAndUpdate(id, {
       product: newProduct,
     });
+
     if (updatedProduct)
       return res.status(200).json({
         message: `Updated product "${updatedProduct.product.name}" successfully!`,
@@ -139,8 +143,10 @@ export const updateCart = async (req, res) => {
 };
 export const deleteCartById = async (req, res) => {
   const id = req.params.id;
+
   try {
     const deletedProduct = await cartModel.findByIdAndDelete(id);
+
     if (deletedProduct)
       return res.status(200).json({
         message: `Deleted Product "${deletedProduct.product.name}" Successfully!`,

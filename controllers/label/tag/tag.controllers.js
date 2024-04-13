@@ -15,12 +15,14 @@ import adminModel from '../../../models/auth/admin/admin.model.js';
 export const getAllTags = async (req, res) => {
   let cachedTags;
   let tags;
+
   try {
     cachedTags = await firstLoadingCache('tags:*', tagModel, []);
     if (cachedTags !== null) {
       return res.status(200).json(cachedTags);
     } else {
       tags = await tagModel.find().lean();
+
       return res.status(200).json(tags !== null ? tags : []);
     }
   } catch (error) {
@@ -33,6 +35,7 @@ export const getAllTags = async (req, res) => {
 export const createTag = async (req, res) => {
   const admin = req.decoded;
   const tag = req.body;
+
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -50,6 +53,7 @@ export const createTag = async (req, res) => {
       const newTag = new tagModel(tag);
       const savedTag = await newTag.save();
       redisClient.set(`tags:${savedTag._id}`, JSON.stringify(savedTag));
+
       return res.status(200).json(savedTag);
     }
   } catch (error) {
@@ -71,6 +75,7 @@ export const updateTag = async (req, res) => {
     });
     if (!auth) return res.status(403).json({ message: 'UnAuthorization' });
     const updatedTag = await tagModel.findByIdAndUpdate(id, tag);
+
     if (!updatedTag) {
       return res.status(404).json({ message: `Not found Tag by id: ${id}` });
     } else {
@@ -105,6 +110,7 @@ export const deleteTag = async (req, res) => {
           productId: product._id,
         });
       });
+
       await deleteCache(`tags:${id}`, deletedTag);
       return res.status(200).json(deletedTag);
     }
