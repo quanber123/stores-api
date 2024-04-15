@@ -1,4 +1,6 @@
-const whileList = ['http://localhost:5173'];
+import { config } from 'dotenv';
+config();
+const whileList = [...process.env.ALLOW_WEBSITE.split(' ')];
 const corsOptions = {
   origin: (origin, cb) => {
     if (whileList.indexOf(origin) !== -1 || !origin) {

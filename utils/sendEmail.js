@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import emailAppModel from '../models/auth/admin/email.app.model.js';
+import emailAppModel from '../models/email.app.model.js';
 const defaultEmail = async () => {
   const user = await emailAppModel.findOne({ default: true }).lean();
   return user;

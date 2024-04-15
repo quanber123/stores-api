@@ -29,14 +29,16 @@ export const firstLoadingCache = async (key, model, populate, sort) => {
     return null;
   }
 };
-export const checkCache = async (key, cb) => {
+export const checkCache = async (key, cb, expressIn) => {
   const data = await redisClient.get(key);
   if (data !== null) {
     return JSON.parse(data);
   } else {
     const freshData = await cb();
     if (freshData !== null) {
-      await redisClient.set(key, JSON.stringify(freshData));
+      expressIn
+        ? await redisClient.setEx(key, expressIn, JSON.stringify(freshData))
+        : await redisClient.set(key, JSON.stringify(freshData));
     }
     return freshData;
   }
