@@ -1,28 +1,30 @@
 import cartModel from '../../models/cart.model.js';
 import orderModel from '../../models/order.model.js';
 import productModel from '../../models/product.model.js';
+import { updateCache } from '../../modules/cache.js';
 import { payOs } from '../../utils/payos.js';
-import mongoose from 'mongoose';
 export const createTransferLink = async (req, res) => {
   const { user } = req.decoded;
   const { user_name, phone, message, address, products, totalPrice } = req.body;
   const client_url = process.env.CLIENT_URL;
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
+    if (products.length === 0)
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: 'Products can not empty!',
+      });
     for (const product of products) {
-      const availableProduct = await productModel
-        .findOne(
-          {
-            _id: product.product.id,
-            'details.variants.color': product.product.color,
-            'details.variants.size': product.product.size,
-          },
-          {
-            'details.variants.$': 1,
-          }
-        )
-        .session(session);
+      const availableProduct = await productModel.findOne(
+        {
+          _id: product.product.id,
+          'details.variants.color': product.product.color,
+          'details.variants.size': product.product.size,
+        },
+        {
+          'details.variants.$': 1,
+        }
+      );
       if (
         availableProduct.details.variants[0].availableQuantity <
         product.product.quantity
@@ -31,20 +33,23 @@ export const createTransferLink = async (req, res) => {
           message: `The product named ${product.product.name} has already been ordered by another user.Please check your cart again!`,
         });
       } else {
-        await productModel
-          .findOneAndUpdate(
-            {
-              _id: product.id,
-              'details.variants.size': product.size,
-              'details.color': product.color,
+        const updatedProduct = await productModel.findOneAndUpdate(
+          {
+            _id: product.product.id,
+            'details.variants.size': product.product.size,
+            'details.variants.color': product.product.color,
+          },
+          {
+            $inc: {
+              'details.variants.$.availableQuantity': -product.product.quantity,
             },
-            {
-              $inc: {
-                'details.variants.$.availableQuantity': -product.quantity,
-              },
-            }
-          )
-          .session(session);
+            updated_at: Date.now(),
+          },
+          {
+            new: true,
+          }
+        );
+        await updateCache(`products:${updatedProduct._id}`, updatedProduct);
       }
       continue;
     }
@@ -60,42 +65,35 @@ export const createTransferLink = async (req, res) => {
       return res
         .status(403)
         .json({ message: `Error creating payment link from bank side` });
-    const createdOrders = await orderModel.create(
-      {
-        user: user.id,
-        paymentMethod: 'transfer',
-        isPaid: false,
-        paymentInfo: {
-          user_name: user_name,
-          phone: phone,
-          message: message,
-          address: address,
-          products: products.map((p) => p.product),
-          ...paymentLinkResponse,
-          totalPrice: products.reduce(
-            (accumulator, p) => p.product.totalPrice + accumulator,
-            0
-          ),
-          totalSalePrice: products.reduce(
-            (accumulator, p) => p.product.amountSalePrice + accumulator,
-            0
-          ),
-        },
+    const createdOrders = await orderModel.create({
+      user: user.id,
+      paymentMethod: 'transfer',
+      isPaid: false,
+      paymentInfo: {
+        user_name: user_name,
+        phone: phone,
+        message: message,
+        address: address,
+        products: products.map((p) => p.product),
+        ...paymentLinkResponse,
+        totalPrice: products.reduce(
+          (accumulator, p) => p.product.totalPrice + accumulator,
+          0
+        ),
+        totalSalePrice: products.reduce(
+          (accumulator, p) => p.product.amountSalePrice + accumulator,
+          0
+        ),
       },
-      {
-        session: session,
-      }
-    );
+    });
     const updatedCarts = products.map(
-      async (p) => await cartModel.findByIdAndDelete(p._id).session(session)
+      async (p) => await cartModel.findByIdAndDelete(p._id)
     );
     await Promise.all(updatedCarts);
-    await session.commitTransaction();
-    session.endSession();
-    return res.status(200).json(createdOrders);
+    return res
+      .status(200)
+      .json({ error: false, success: true, order: createdOrders });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     console.error(error);
     return res.status(500).json({ message: error.message });
   }
@@ -104,88 +102,85 @@ export const createTransferLink = async (req, res) => {
 export const createCashPayment = async (req, res) => {
   const { user } = req.decoded;
   const { user_name, phone, message, address, products, totalPrice } = req.body;
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
+    if (products.length === 0)
+      return res.status(400).json({
+        error: true,
+        success: false,
+        message: 'Products can not empty!',
+      });
     for (const product of products) {
-      const availableProduct = await productModel
-        .findOne(
-          {
-            _id: product.product.id,
-            'details.variants.color': product.product.color,
-            'details.variants.size': product.product.size,
-          },
-          {
-            'details.variants.$': 1,
-          }
-        )
-        .session(session);
+      const availableProduct = await productModel.findOne(
+        {
+          _id: product.product.id,
+          'details.variants.color': product.product.color,
+          'details.variants.size': product.product.size,
+        },
+        {
+          'details.variants.$': 1,
+        }
+      );
       if (
         availableProduct.details.variants[0].availableQuantity <
         product.product.quantity
       ) {
-        await session.abortTransaction();
-        session.endSession();
         return res.status(409).json({
+          error: true,
+          success: false,
           message: `The product named ${product.product.name} has already been ordered by another user. Please check your cart again!`,
         });
       } else {
-        await productModel
-          .findOneAndUpdate(
-            {
-              _id: product.id,
-              'details.variants.size': product.size,
-              'details.color': product.color,
+        const updatedProduct = await productModel.findOneAndUpdate(
+          {
+            _id: product.product.id,
+            'details.variants.size': product.product.size,
+            'details.variants.color': product.product.color,
+          },
+          {
+            $inc: {
+              'details.variants.$.availableQuantity': -product.product.quantity,
             },
-            {
-              $inc: {
-                'details.variants.$.availableQuantity': -product.quantity,
-              },
-            }
-          )
-          .session(session);
+            updated_at: Date.now(),
+          },
+          {
+            new: true,
+          }
+        );
+        await updateCache(`products:${updatedProduct._id}`, updatedProduct);
       }
       continue;
     }
-    const createdOrders = await orderModel.create(
-      [
-        {
-          user: user.id,
-          paymentMethod: 'cash',
-          isPaid: false,
-          paymentInfo: {
-            user_name: user_name,
-            phone: phone,
-            message: message,
-            address: address,
-            products: products.map((p) => p.product),
-            orderCode: Number(String(Date.now()).slice(-6)),
-            amount: totalPrice,
-            status: 'pending',
-            totalPrice: products.reduce(
-              (accumulator, p) => p.product.totalPrice + accumulator,
-              0
-            ),
-            totalSalePrice: products.reduce(
-              (accumulator, p) => p.product.amountSalePrice + accumulator,
-              0
-            ),
-          },
-        },
-      ],
-      { session: session }
-    );
+    const createdOrders = await orderModel.create({
+      user: user.id,
+      paymentMethod: 'cash',
+      isPaid: false,
+      paymentInfo: {
+        user_name: user_name,
+        phone: phone,
+        message: message,
+        address: address,
+        products: products.map((p) => p.product),
+        orderCode: Number(String(Date.now()).slice(-6)),
+        amount: totalPrice,
+        status: 'pending',
+        totalPrice: products.reduce(
+          (accumulator, p) => p.product.totalPrice + accumulator,
+          0
+        ),
+        totalSalePrice: products.reduce(
+          (accumulator, p) => p.product.amountSalePrice + accumulator,
+          0
+        ),
+      },
+    });
     const updatedCarts = products.map(
-      async (p) => await cartModel.findByIdAndDelete(p._id).session(session)
+      async (p) => await cartModel.findByIdAndDelete(p._id)
     );
     await Promise.all(updatedCarts);
-    await session.commitTransaction();
-    session.endSession();
-    return res.status(200).json(createdOrders);
+    return res
+      .status(200)
+      .json({ error: false, success: true, order: createdOrders });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error(error);
     return res.status(500).json({ message: error.message });
   }
 };
@@ -261,55 +256,49 @@ export const updateOrder = async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const curOrder = await orderModel.findOne({
       user: user.id,
       'paymentInfo.orderCode': Number(orderId),
     });
+    if (
+      (!curOrder.isProcessing &&
+        curOrder.paymentMethod === 'transfer' &&
+        status === 'cancel') ||
+      curOrder.isProcessing
+    ) {
+      const updatedOrder = await orderModel.findOneAndUpdate(
+        {
+          user: user.id,
+          'paymentInfo.orderCode': Number(orderId),
+        },
+        {
+          'paymentInfo.status': status,
+          updated_at: Date.now(),
+        },
+        { new: true }
+      );
 
-    if (curOrder.isProcessing && curOrder.paymentMethod !== 'transfer') {
-      const updatedOrder = await orderModel
-        .findOneAndUpdate(
-          {
-            user: user.id,
-            'paymentInfo.orderCode': Number(orderId),
-          },
-          {
-            'paymentInfo.status': status,
-            updated_at: Date.now(),
-          },
-          { new: true }
-        )
-        .session(session);
+      if (status === 'cancel' && updatedOrder.paymentMethod === 'transfer') {
+        await payOs.cancelPaymentLink(orderId, status.cancellationReason);
+      }
 
       if (status === 'delivered') {
         const productUpdates = updatedOrder.paymentInfo.products.map(
           async (p) => {
-            await productModel
-              .findOneAndUpdate(
-                {
-                  _id: p.id,
-                  'details.variants.size': p.size,
-                  'details.variants.color': p.color,
-                },
-                { $inc: { 'details.variants.$.quantity': -p.quantity } }
-              )
-              .session(session);
+            await productModel.findOneAndUpdate(
+              {
+                _id: p.id,
+                'details.variants.size': p.size,
+                'details.variants.color': p.color,
+              },
+              { $inc: { 'details.variants.$.quantity': -p.quantity } }
+            );
           }
         );
 
         await Promise.all(productUpdates);
       }
-
-      await session.commitTransaction();
-      session.endSession();
-      if (status === 'cancel' && updatedOrder.paymentMethod === 'transfer') {
-        await payOs.cancelPaymentLink(orderId, status.cancellationReason);
-      }
-
       return res.status(200).json({
         error: false,
         success: true,
@@ -324,8 +313,6 @@ export const updateOrder = async (req, res) => {
         'You cannot update an order if the seller has not yet processed it',
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     return res.status(500).json({ message: error.message });
   }
 };

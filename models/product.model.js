@@ -97,4 +97,5 @@ productSchema.index({ 'details.category': 1 });
 productSchema.index({ 'details.tags': 1 });
 productSchema.index({ 'details.category': 1, 'details.tags': 1, name: 'text' });
 productSchema.index({ 'details.category': 1, 'details.tags': 1 });
+productSchema.index({ _id: 1, 'details.category': 1, 'details.tags': 1 });
 export default mongoose.model('Product', productSchema);

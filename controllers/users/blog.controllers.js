@@ -2,7 +2,7 @@ import blogModel from '../../models/blog.model.js';
 import commentModel from '../../models/comment.model.js';
 import categoryModel from '../../models/category.model.js';
 import tagModel from '../../models/tag.model.js';
-import { updateCache } from '../../modules/cache.js';
+import { checkCache, updateCache } from '../../modules/cache.js';
 export const getAllBlogs = async (req, res) => {
   const { category, tag, page } = req.query;
   let query = {};
@@ -80,12 +80,18 @@ export const getAllComments = async (req, res) => {
     const commentData = await checkCache(`comments:${id}`, async () => {
       const existedComment = await commentModel
         .findOne({ blogId: id })
+        .sort({ 'comments.created_at': -1 })
         .populate('blogId');
       return existedComment ? existedComment : {};
     });
-    return res
-      .status(200)
-      .json({ error: false, success: true, comment: commentData });
+    const sortComment = commentData.comments.sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+    return res.status(200).json({
+      error: false,
+      success: true,
+      comment: { blogId: commentData._id, comments: [...sortComment] },
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -94,7 +100,6 @@ export const postComment = async (req, res) => {
   const { id } = req.params;
   const { user } = req.decoded;
   const { text } = req.body;
-
   try {
     let comment = {
       user: {
@@ -110,6 +115,9 @@ export const postComment = async (req, res) => {
         { blogId: id },
         {
           $push: { comments: comment },
+        },
+        {
+          new: true,
         }
       );
       if (updatedComment) {
@@ -121,13 +129,11 @@ export const postComment = async (req, res) => {
         comments: [comment],
       });
     }
-    return res
-      .status(200)
-      .json({
-        error: false,
-        success: true,
-        message: 'Post comment successfully!',
-      });
+    return res.status(200).json({
+      error: false,
+      success: true,
+      message: 'Post comment successfully!',
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

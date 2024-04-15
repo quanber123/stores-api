@@ -58,7 +58,7 @@ export const getAllProducts = async (req, res) => {
     if (search != 'null' && search) {
       const unaccentedQueryString = unidecode(search);
       const regex = new RegExp(unaccentedQueryString, 'i');
-      query.$text = { $search: regex };
+      query.name = regex;
     }
     const keyValuePairs = Object.entries(req.query).map(
       ([key, value]) => `${key}:${value.replace(/\s+/g, '')}`
