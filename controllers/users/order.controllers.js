@@ -292,7 +292,12 @@ export const updateOrder = async (req, res) => {
                 'details.variants.size': p.size,
                 'details.variants.color': p.color,
               },
-              { $inc: { 'details.variants.$.quantity': -p.quantity } }
+              {
+                $inc: {
+                  'details.variants.$.quantity': -p.quantity,
+                  isPaid: true,
+                },
+              }
             );
           }
         );

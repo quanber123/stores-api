@@ -49,7 +49,7 @@ connectRedis();
 const app = express();
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minutes
-  limit: 50,
+  limit: 60,
   handler: function (req, res) {
     res.status(429).json({
       error: true,
@@ -59,7 +59,7 @@ const apiLimiter = rateLimit({
     });
   },
   skip: (req, res) => {
-    if (req.ip === '::ffff:127.0.0.1') return true;
+    if (req.ip === '::1') return true;
     return false;
   },
 });

@@ -84,13 +84,16 @@ export const getAllComments = async (req, res) => {
         .populate('blogId');
       return existedComment ? existedComment : {};
     });
-    const sortComment = commentData.comments.sort(
+    const sortComment = commentData?.comments?.sort(
       (a, b) => new Date(b.created_at) - new Date(a.created_at)
     );
     return res.status(200).json({
       error: false,
       success: true,
-      comment: { blogId: commentData._id, comments: [...sortComment] },
+      comment: {
+        blogId: commentData._id,
+        comments: sortComment ? [...sortComment] : [],
+      },
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });

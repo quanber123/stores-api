@@ -190,47 +190,34 @@ export const getReviews = async (req, res) => {
 export const reviewsProduct = async (req, res) => {
   const { user } = req.decoded;
   const { rate, reviews, showUser, productId, orderId } = req.body;
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
-    await reviewsModel.create(
+    await reviewsModel.create({
+      productId: productId,
+      rate: rate,
+      reviews: reviews,
+      avatar: showUser
+        ? user.image
+        : `${process.env.APP_URL}/public/avatar-trang.jpg`,
+      showUser: showUser,
+      username: showUser ? hidePartialUsername(user.email) : user.email,
+    });
+    await orderModel.findOneAndUpdate(
       {
-        productId: productId,
-        rate: rate,
-        reviews: reviews,
-        avatar: showUser
-          ? user.image
-          : `${process.env.APP_URL}/public/avatar-trang.jpg`,
-        showUser: showUser,
-        username: showUser ? hidePartialUsername(user.email) : user.email,
+        _id: orderId,
+        'paymentInfo.products.id': productId,
       },
       {
-        session: session,
-      }
+        $set: {
+          'paymentInfo.products.$.isReview': true,
+        },
+      },
+      { new: true }
     );
-    await orderModel
-      .findOneAndUpdate(
-        {
-          _id: orderId,
-          'paymentInfo.products.id': productId,
-        },
-        {
-          $set: {
-            'paymentInfo.products.$.isReview': true,
-          },
-        },
-        { new: true }
-      )
-      .session(session);
-    await session.commitTransaction();
-    session.endSession();
     await deleteCache(`products:${productId}_reviews`);
     return res
       .status(200)
       .json({ error: false, success: true, message: 'Reviews Successfully!' });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     return res.status(500).json({ message: error.message });
   }
 };
