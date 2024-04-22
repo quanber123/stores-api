@@ -1,0 +1,56 @@
+[{
+  "_id": {
+    "$oid": "654c947a28acf90d9825b72d"
+  },
+  "name": "fashion",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "654c94892dae0eca586c20b6"
+  },
+  "name": "beauty",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "654c94962dae0eca586c20b9"
+  },
+  "name": "street style",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "654c949c2dae0eca586c20bc"
+  },
+  "name": "life style",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "654c94a62dae0eca586c20bf"
+  },
+  "name": "jacket",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "662239428ab87aa0e06e273d"
+  },
+  "name": "test",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "662239b98ab87aa0e06e274c"
+  },
+  "name": "test2",
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "66223a1a8ab87aa0e06e2759"
+  },
+  "name": "test3",
+  "__v": 0
+}]

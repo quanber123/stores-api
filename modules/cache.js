@@ -44,15 +44,13 @@ export const checkCache = async (key, cb, expressIn) => {
   }
 };
 export const updateCache = async (key, data) => {
-  const keysCache = await redisClient.keys(key);
+  const keysCache = await redisClient.get(key);
   if (!keysCache) {
     return 'Cache not found!';
   }
   try {
-    keysCache.forEach(async (k) => {
-      await redisClient.set(k, JSON.stringify(data));
-      console.log('Cache updated successfully!');
-    });
+    await redisClient.set(k, JSON.stringify(data));
+    console.log('Cache updated successfully!');
     return;
   } catch (error) {
     console.error('Error parsing JSON:', error);
