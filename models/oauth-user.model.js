@@ -17,6 +17,10 @@ const oauthUserSchema = new mongoose.Schema({
     default: true,
   },
   oauthProvider: String,
+  type: {
+    type: String,
+    default: 'user',
+  },
 });
 oauthUserSchema.indexes({ id: 1 });
 export default mongoose.model('OauthUser', oauthUserSchema);

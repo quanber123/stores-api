@@ -23,7 +23,7 @@ const cartSchema = new mongoose.Schema({
       type: Number,
       required: true,
     },
-    amountSalePrice: {
+    discount: {
       type: Number,
       required: true,
       default: 0,

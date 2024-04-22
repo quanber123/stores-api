@@ -102,7 +102,7 @@ export const getTotalAmount = async (req, res) => {
       {
         $match: {
           'paymentInfo.status': 'delivered',
-          totalSalePrice: {
+          'paymentInfo.totalSalePrice': {
             $gt: 1,
           },
         },
@@ -227,7 +227,7 @@ export const getWeeklyFigures = async (req, res) => {
             $gte: startDate,
             $lte: endDate,
           },
-          totalSalePrice: {
+          'paymentInfo.totalSalePrice': {
             $gt: 1,
           },
           'paymentInfo.status': 'delivered',
@@ -239,10 +239,11 @@ export const getWeeklyFigures = async (req, res) => {
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$created_at' } },
-          total: { $sum: '$totalSalePrice' },
+          total: { $sum: '$paymentInfo.totalSalePrice' },
         },
       },
     ]);
+    console.log(totalSales);
     const totalOrders = await orderModel.aggregate([
       {
         $match: {

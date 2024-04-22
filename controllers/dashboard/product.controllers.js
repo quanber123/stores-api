@@ -5,6 +5,7 @@ import tagModel from '../../models/tag.model.js';
 import { deleteCache, updateCache } from '../../modules/cache.js';
 import { optimizedImg } from '../../middleware/optimizedImg.js';
 import adminModel from '../../models/admin.model.js';
+import { redisClient } from '../../config/redis.js';
 // Get all products
 export const dashboard_getAllProducts = async (req, res) => {
   const admin = req.decoded;
@@ -169,7 +170,6 @@ export const createProduct = async (req, res) => {
       category: category,
     },
   };
-
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -192,30 +192,40 @@ export const createProduct = async (req, res) => {
       variants.length === 0 ||
       !files
     )
-      return res.status(400).json({ message: 'Bad requests!' });
+      return res
+        .status(400)
+        .json({ error: true, success: false, message: 'Bad requests!' });
     const duplicatedProduct = await productModel.findOne({
       name: name.toLowerCase(),
     });
     if (duplicatedProduct)
-      return res.status(409).json({ message: 'This product already existed!' });
+      return res.status(409).json({
+        error: true,
+        success: false,
+        message: 'This product already existed!',
+      });
     product.details.variants = product.details.variants.map((v) => {
-      return { color: v.color, size: v.size, quantity: Number(v.quantity) };
+      return {
+        color: v.color,
+        size: v.size,
+        quantity: Number(v.quantity),
+        availableQuantity: Number(v.quantity),
+      };
     });
-    const optimizationPromises = files.map(async (file) => {
-      const optimized = await optimizedImg(file, 400, 400, 100);
-      if (optimized) {
-        return `${process.env.APP_URL}/${optimized}`;
-      } else {
-        return `${process.env.APP_URL}/${file.path}`;
-      }
+    const images = files.map(async (file) => {
+      return file.path;
     });
-    const imageUrls = await Promise.all(optimizationPromises);
+    const imageUrls = await Promise.all(images);
     product.images.push(...imageUrls);
     const newProduct = new productModel(product);
     const savedProduct = await newProduct.save();
 
     if (savedProduct) {
       await deleteCache('products_all*');
+      await redisClient.set(
+        `products:${savedProduct._id}`,
+        JSON.stringify(savedProduct)
+      );
       return res.status(201).json({
         error: false,
         success: true,
@@ -236,8 +246,8 @@ export const updateProduct = async (req, res) => {
   const { id } = req.params;
   const product = req.body;
   const files = req.files;
-  let optimizationPromises = [];
-  let optimizationResults;
+  const oldImages = JSON.parse(product.old_images);
+  let updatedImages;
 
   try {
     const auth = await adminModel.findOne({
@@ -262,22 +272,19 @@ export const updateProduct = async (req, res) => {
     )
       return res.status(400).json({ message: 'Bad requests!' });
     if (files) {
-      optimizationPromises = files.map(async (file) => {
-        const optimized = await optimizedImg(file, 400, 400, 100);
-        if (optimized) {
-          return `${process.env.APP_URL}/${optimized}`;
-        } else {
-          return `${process.env.APP_URL}/${file.path}`;
-        }
-      });
-      optimizationResults = await Promise.all(optimizationPromises);
+      const listImg = files
+        .filter((file) => !oldImages.includes(file.path))
+        .map(async (file) => {
+          return file.path;
+        });
+      updatedImages = await Promise.all(listImg);
     }
     const variants = JSON.parse(product.variants).map((v) => {
       return { color: v.color, size: v.size, quantity: Number(v.quantity) };
     });
     const update = {
       name: product.name,
-      images: [...optimizationResults, ...JSON.parse(product.old_images)],
+      images: [...updatedImages, ...oldImages],
       price: Number(product.price),
       finalPrice: Number(product.price),
       details: {
@@ -299,7 +306,7 @@ export const updateProduct = async (req, res) => {
       return res.status(200).json({
         error: false,
         success: true,
-        message: 'Updated successfully!',
+        message: 'Updated product successfully!',
         updatedProduct,
       });
     }
@@ -332,7 +339,7 @@ export const deleteProduct = async (req, res) => {
       return res.status(200).json({
         error: false,
         success: true,
-        message: 'Deleted successfully!',
+        message: 'Deleted product successfully!',
       });
     }
   } catch (error) {

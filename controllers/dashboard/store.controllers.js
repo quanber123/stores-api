@@ -1,6 +1,7 @@
 import { redisClient } from '../../config/redis.js';
 import storeModel from '../../models/store.model.js';
 import { deleteCache, updateCache } from '../../modules/cache.js';
+import adminModel from '../../models/admin.model.js';
 
 // Get All Store
 

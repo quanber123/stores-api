@@ -43,6 +43,8 @@ import { router_store } from './router/users/store.router.js';
 import { router_store_dashboard } from './router/dashboard/store.router.js';
 import { router_tag } from './router/users/tag.router.js';
 import { router_user } from './router/users/user.router.js';
+import { router_admin } from './router/dashboard/admin.router.js';
+import { router_seo } from './router/dashboard/SEO.router.js';
 config();
 connectDb();
 connectRedis();
@@ -110,6 +112,8 @@ async function seedBlogData() {
 setCampaign('0 0 * * * *', checkAndUpdateCoupon);
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(router_seo);
+app.use(router_admin);
 app.use(router_banner_dashboard);
 app.use(router_blog_dashboard);
 app.use(router_category_dashboard);

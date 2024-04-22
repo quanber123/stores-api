@@ -9,8 +9,8 @@ import {
 const router = Router();
 router.use(json());
 router
-  .route('/api/coupons')
+  .route('/api/dashboard/coupons')
   .get(auth, getAllCoupons)
   .post(auth, uploadImg.single('image'), createCoupon);
-router.route('/api/coupons/:id').delete(auth, deleteCoupon);
+router.route('/api/dashboard/coupons/:id').delete(auth, deleteCoupon);
 export const router_coupon_dashboard = router;

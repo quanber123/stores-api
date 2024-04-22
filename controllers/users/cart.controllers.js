@@ -35,7 +35,7 @@ export const createCart = async (req, res) => {
       size: cart.size,
       quantity: cart.quantity,
       price: cart.price,
-      amountSalePrice: 0,
+      discount: 0,
       salePrice: 0,
       finalPrice: 0,
       totalPrice: 0,
@@ -83,9 +83,10 @@ export const createCart = async (req, res) => {
     }
     if (cart.salePrice > 0) {
       newCart.product['salePrice'] = cart.salePrice;
-      newCart.product['amountSalePrice'] = cart.sale;
-      newCart.product['finalPrice'] = cart.salePrice;
-      newCart.product['totalPrice'] = cart.salePrice * cart.quantity;
+      newCart.product['discount'] = cart.discount;
+      newCart.product['finalPrice'] = cart.price - cart.salePrice;
+      newCart.product['totalPrice'] =
+        (cart.price - cart.salePrice) * cart.quantity;
     } else {
       newCart.product['finalPrice'] = cart.price;
       newCart.product['totalPrice'] = cart.price * cart.quantity;

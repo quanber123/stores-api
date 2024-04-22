@@ -8,6 +8,8 @@ const statusOrderSchema = new mongoose.Schema({
   number: Number,
   color: String,
   backgroundColor: String,
+  validRole: String,
 });
 statusOrderSchema.indexes({ name: 1 });
+statusOrderSchema.indexes({ name: 1, validRole: 1 });
 export default mongoose.model('StatusOrder', statusOrderSchema);

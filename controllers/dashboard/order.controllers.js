@@ -1,8 +1,10 @@
 import orderModel from '../../models/order.model.js';
 import adminModel from '../../models/admin.model.js';
+import statusOrderModel from '../../models/status.order.model.js';
 export const updateOrder = async (req, res) => {
   const { orderId } = req.params;
   const { status, userId } = req.body;
+  console.log(status);
   const admin = req.decoded;
   try {
     const auth = await adminModel.findOne({
@@ -13,7 +15,11 @@ export const updateOrder = async (req, res) => {
       return res
         .status(403)
         .json({ error: true, success: false, message: 'UnAuthorization!' });
-    if (status !== 'processing') {
+    const allowRole = await statusOrderModel.findOne({
+      validRole: admin.role,
+      name: status,
+    });
+    if (allowRole.name !== 'processing') {
       return res.status(403).json({
         error: true,
         success: false,

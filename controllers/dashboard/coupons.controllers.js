@@ -3,7 +3,7 @@ import { optimizedImg } from '../../middleware/optimizedImg.js';
 import couponModel from '../../models/coupon.model.js';
 import productModel from '../../models/product.model.js';
 import { deleteCache } from '../../modules/cache.js';
-
+import adminModel from '../../models/admin.model.js';
 export const getAllCoupons = async (req, res) => {
   const admin = req.decoded;
   const { page } = req.query;
@@ -86,7 +86,7 @@ export const createCoupon = async (req, res) => {
   const coupon = {
     id: String(Date.now()).slice(-6),
     name: name,
-    image: null,
+    image: file.path,
     discount: Number(discount),
     max_discount: Number(max_discount),
     min_amount: Number(min_amount),
@@ -98,7 +98,7 @@ export const createCoupon = async (req, res) => {
       todayMonth === couponStartMonth &&
       todayYear === couponStartYear
         ? new Date().setHours(23, 59, 59, 999)
-        : new Date(startDate).setHours(0, 0, 0, 0),
+        : new Date(startDate).setHours(0, 0, 0, 1),
     endDate: new Date(endDate).setHours(23, 59, 59, 999),
   };
   try {
@@ -114,27 +114,15 @@ export const createCoupon = async (req, res) => {
     if (duplicatedCoupon) {
       return res.status(409).json({ message: 'This sale already existed!' });
     }
-    const optimized = await optimizedImg(file, 800, 800, 80);
-    if (optimized) {
-      coupon.image = `${process.env.APP_URL}/${optimized}`;
-    } else {
-      coupon.image = `${process.env.APP_URL}/${file.path}`;
-    }
     const newSale = new couponModel(coupon);
     const savedCoupon = await newSale.save();
     if (savedCoupon) {
-      setCampaign(
-        new Date(savedCoupon.startDate),
-        updateProductsForSale(savedCoupon)
-      );
+      return res
+        .status(201)
+        .json({ message: 'Coupon created successfully', savedCoupon });
     }
-
-    res
-      .status(201)
-      .json({ message: 'Coupon created successfully', savedCoupon });
   } catch (error) {
     return res.status(500).json({ message: error.message });
-  } finally {
   }
 };
 const disabledCoupon = async (coupon) => {
@@ -144,6 +132,8 @@ const disabledCoupon = async (coupon) => {
     product.saleAmount = 0;
     product.finalPrice = product.price;
     await productModel.findOneAndUpdate({ _id: product._id }, product);
+    await deleteCache(`products:${product._id}`);
+    await deleteCache(`products_all*`);
   });
   await Promise.all(updatePromises);
 };
@@ -162,15 +152,21 @@ export const deleteCoupon = async (req, res) => {
 };
 export const checkAndUpdateCoupon = async () => {
   try {
-    const expiredDiscount = await couponModel.find({
-      endDate: { $lte: new Date() },
-      expired: false,
-    });
-    if (expiredDiscount.length > 0) {
-      for (const coupon of expiredDiscount) {
-        await couponModel.updateOne({ id: coupon.id }, { expired: true });
-        await disabledCoupon(coupon);
-        console.log(`Coupon ${coupon.id} has expired.`);
+    const startDay = new Date().setHours(0, 0, 0, 0);
+    const endDay = new Date().setHours(23, 59, 59, 999);
+    const coupons = await couponModel.find({ expired: false });
+    if (coupons.length > 0) {
+      for (const coupon of coupons) {
+        if (
+          new Date(coupon.endDate) < endDay &&
+          startDay > new Date(coupon.startDate)
+        ) {
+          await couponModel.updateOne({ id: coupon.id }, { expired: true });
+          await disabledCoupon(coupon);
+          console.log(`Coupon ${coupon.id} has expired.`);
+        } else {
+          await updateProductsForSale(coupon);
+        }
       }
     }
   } catch (error) {

@@ -1,6 +1,7 @@
 import cartModel from '../../models/cart.model.js';
 import orderModel from '../../models/order.model.js';
 import productModel from '../../models/product.model.js';
+import statusModel from '../../models/status.order.model.js';
 import { updateCache } from '../../modules/cache.js';
 import { payOs } from '../../utils/payos.js';
 export const createTransferLink = async (req, res) => {
@@ -81,7 +82,7 @@ export const createTransferLink = async (req, res) => {
           0
         ),
         totalSalePrice: products.reduce(
-          (accumulator, p) => p.product.amountSalePrice + accumulator,
+          (accumulator, p) => p.product.salePrice + accumulator,
           0
         ),
       },
@@ -168,7 +169,7 @@ export const createCashPayment = async (req, res) => {
           0
         ),
         totalSalePrice: products.reduce(
-          (accumulator, p) => p.product.amountSalePrice + accumulator,
+          (accumulator, p) => p.product.salePrice + accumulator,
           0
         ),
       },
@@ -201,15 +202,17 @@ export const getAllOrdersUser = async (req, res) => {
       };
     }
     const totalOrders = await orderModel.countDocuments(query);
-    const total = Math.ceil(totalOrders / 8);
+    const total = Math.ceil(totalOrders / 6);
     const findAllOrders = await orderModel
       .find(query)
       .sort({ updated_at: -1 })
-      .skip((page - 1) * 8)
-      .limit(8)
+      .skip((page - 1) * 6)
+      .limit(6)
       .lean();
     if (findAllOrders)
       return res.status(200).json({
+        error: false,
+        success: true,
         orders: findAllOrders !== null ? findAllOrders : [],
         totalPage: total,
       });
@@ -220,20 +223,13 @@ export const getAllOrdersUser = async (req, res) => {
 export const getOrdersUserById = async (req, res) => {
   const { user } = req.decoded;
   const { orderId } = req.params;
-  const { payment } = req.query;
-  let order;
   try {
-    if (!payment) return res.status(400).json({ message: 'Bad Request!' });
-    if (payment === 'transfer') {
-      order = await payOs.getPaymentLinkInformation(orderId);
-    } else {
-      order = await orderModel
-        .findOne({
-          user: user.id,
-          'paymentInfo.orderCode': orderId,
-        })
-        .lean();
-    }
+    const order = await orderModel
+      .findOne({
+        user: user.id,
+        'paymentInfo.orderCode': orderId,
+      })
+      .lean();
     if (order) {
       return res.status(200).json({
         error: false,
@@ -254,36 +250,45 @@ export const getOrdersUserById = async (req, res) => {
 export const updateOrder = async (req, res) => {
   const { user } = req.decoded;
   const { orderId } = req.params;
-  const { status } = req.body;
+  const { status, isPaid } = req.body;
 
   try {
+    const allowRole = await statusModel.findOne({
+      validRole: user.type,
+      name: status,
+    });
+    if (!allowRole)
+      return res.status(403).json({
+        error: true,
+        success: false,
+        message: 'This update is for admin only!',
+      });
     const curOrder = await orderModel.findOne({
       user: user.id,
       'paymentInfo.orderCode': Number(orderId),
+      isPaid: false,
     });
-    if (
-      (!curOrder.isProcessing &&
-        curOrder.paymentMethod === 'transfer' &&
-        status === 'cancel') ||
-      curOrder.isProcessing
-    ) {
+    if (!curOrder.isPaid) {
       const updatedOrder = await orderModel.findOneAndUpdate(
         {
           user: user.id,
           'paymentInfo.orderCode': Number(orderId),
         },
         {
+          isPaid: isPaid ? isPaid : false,
           'paymentInfo.status': status,
           updated_at: Date.now(),
         },
         { new: true }
       );
-
-      if (status === 'cancel' && updatedOrder.paymentMethod === 'transfer') {
+      if (
+        allowRole.name === 'cancel' &&
+        updatedOrder.paymentMethod === 'transfer'
+      ) {
         await payOs.cancelPaymentLink(orderId, status.cancellationReason);
       }
 
-      if (status === 'delivered') {
+      if (allowRole.name === 'delivered') {
         const productUpdates = updatedOrder.paymentInfo.products.map(
           async (p) => {
             await productModel.findOneAndUpdate(
@@ -295,7 +300,6 @@ export const updateOrder = async (req, res) => {
               {
                 $inc: {
                   'details.variants.$.quantity': -p.quantity,
-                  isPaid: true,
                 },
               }
             );
@@ -310,13 +314,6 @@ export const updateOrder = async (req, res) => {
         message: `Updated Order Successfully!`,
       });
     }
-
-    return res.status(403).json({
-      error: true,
-      success: false,
-      message:
-        'You cannot update an order if the seller has not yet processed it',
-    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

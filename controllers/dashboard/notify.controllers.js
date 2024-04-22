@@ -2,6 +2,7 @@ import { settingDeletionQueue } from '../../config/queue.js';
 import { redisClient } from '../../config/redis.js';
 import notifyModel from '../../models/notify.model.js';
 import settingsModel from '../../models/settings.model.js';
+import adminModel from '../../models/admin.model.js';
 export const getAllNotifications = async (req, res) => {
   const admin = req.decoded;
   try {

@@ -1,6 +1,5 @@
 import contactModel from '../../models/contact.model.js';
 import adminModel from '../../models/admin.model.js';
-import { sendMailToAdmin } from '../../utils/sendEmail.js';
 export const getAllContacts = async (req, res) => {
   const { page } = req.query;
   const admin = req.decoded;

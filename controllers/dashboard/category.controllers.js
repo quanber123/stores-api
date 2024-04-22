@@ -1,5 +1,7 @@
 import categoryModel from '../../models/category.model.js';
-import { optimizedImg } from '../../middleware/optimizedImg.js';
+import adminModel from '../../models/admin.model.js';
+import { redisClient } from '../../config/redis.js';
+import { updateCache } from '../../modules/cache.js';
 // Get All Categories
 export const getAllCategories = async (req, res) => {
   const admin = req.decoded;
@@ -19,7 +21,7 @@ export const getAllCategories = async (req, res) => {
       categories: categories !== null ? categories : [],
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -54,16 +56,10 @@ export const createCategory = async (req, res) => {
       });
     const category = {
       id: String(Date.now()).slice(-6),
-      image: null,
+      image: file.path,
       name: name,
       description: description,
     };
-    const optimized = await optimizedImg(file, 400, 300, 80);
-    if (optimized) {
-      category.image = `${process.env.APP_URL}/${optimized}`;
-    } else {
-      category.image = `${process.env.APP_URL}/${file.path}`;
-    }
     const newCategory = new categoryModel(category);
     const savedCategory = await newCategory.save();
 
@@ -76,7 +72,7 @@ export const createCategory = async (req, res) => {
     return res.status(201).json({
       error: true,
       success: false,
-      message: `category ${category.name} created successfully`,
+      message: `Created category ${category.name} successfully`,
       category: savedCategory,
     });
   } catch (error) {
@@ -91,8 +87,6 @@ export const updateCategory = async (req, res) => {
   const { id } = req.params;
   const { name, description } = req.body;
   const file = req.file;
-  let optimized;
-  let optimizationResults;
 
   try {
     const auth = await adminModel.findOne({
@@ -104,22 +98,16 @@ export const updateCategory = async (req, res) => {
         .status(403)
         .json({ error: true, success: false, message: 'UnAuthorization!' });
     if (file) {
-      optimized = await optimizedImg(file, 400, 300, 80);
-      if (optimized) {
-        optimizationResults = `${process.env.APP_URL}/${optimized}`;
-      } else {
-        optimizationResults = `${process.env.APP_URL}/${file.path}`;
-      }
       const updatedCategory = await categoryModel.findByIdAndUpdate(id, {
         name: name,
         description: description,
-        image: optimizationResults,
+        image: file.path,
       });
       if (updatedCategory) {
         await updateCache(`categories:${updatedCategory._id}`, updatedCategory);
         return res
           .status(200)
-          .json({ message: 'Updated successfully!', updatedCategory });
+          .json({ message: 'Updated category successfully!', updatedCategory });
       }
     }
     const updatedCategory = await categoryModel.findByIdAndUpdate(id, {
@@ -132,7 +120,7 @@ export const updateCategory = async (req, res) => {
       return res.status(200).json({
         error: false,
         success: true,
-        message: 'Updated successfully!',
+        message: 'Updated category successfully!',
         updatedCategory,
       });
     }
@@ -173,9 +161,12 @@ export const deleteCategory = async (req, res) => {
           productId: product._id,
         });
       });
-      return res
-        .status(200)
-        .json({ error: false, success: true, category: deletedCategory });
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'Deleted category successfully!',
+        category: deletedCategory,
+      });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });

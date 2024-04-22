@@ -29,6 +29,10 @@ const authUserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  type: {
+    type: String,
+    default: 'user',
+  },
 });
 authUserSchema.indexes({ id: 1 });
 export default mongoose.model('AuthUser', authUserSchema);

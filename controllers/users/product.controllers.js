@@ -191,32 +191,39 @@ export const reviewsProduct = async (req, res) => {
   const { user } = req.decoded;
   const { rate, reviews, showUser, productId, orderId } = req.body;
   try {
-    await reviewsModel.create({
-      productId: productId,
-      rate: rate,
-      reviews: reviews,
-      avatar: showUser
-        ? user.image
-        : `${process.env.APP_URL}/public/avatar-trang.jpg`,
-      showUser: showUser,
-      username: showUser ? hidePartialUsername(user.email) : user.email,
-    });
-    await orderModel.findOneAndUpdate(
-      {
-        _id: orderId,
-        'paymentInfo.products.id': productId,
-      },
-      {
-        $set: {
-          'paymentInfo.products.$.isReview': true,
+    const [createdReviews, updatedOrder] = await Promise.all([
+      reviewsModel.create({
+        productId: productId,
+        rate: rate,
+        reviews: reviews,
+        avatar: showUser
+          ? user.image
+          : `${process.env.APP_URL}/public/avatar-trang.jpg`,
+        showUser: showUser,
+        username: showUser ? hidePartialUsername(user.email) : user.email,
+      }),
+      orderModel.findOneAndUpdate(
+        {
+          user: user.id,
+          'paymentInfo.orderCode': orderId,
+          'paymentInfo.products.id': productId,
         },
-      },
-      { new: true }
-    );
-    await deleteCache(`products:${productId}_reviews`);
-    return res
-      .status(200)
-      .json({ error: false, success: true, message: 'Reviews Successfully!' });
+        {
+          $set: {
+            'paymentInfo.products.$.isReview': true,
+          },
+        },
+        { new: true }
+      ),
+    ]);
+    if (createdReviews && updatedOrder) {
+      await deleteCache(`products:${productId}*`);
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'Reviews Successfully!',
+      });
+    }
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

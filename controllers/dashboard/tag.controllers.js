@@ -52,9 +52,12 @@ export const createTag = async (req, res) => {
       const newTag = new tagModel(tag);
       const savedTag = await newTag.save();
       await redisClient.set(`tags:${savedTag._id}`, JSON.stringify(savedTag));
-      return res
-        .status(200)
-        .json({ error: false, success: true, tags: savedTag });
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'Created tag successfully!',
+        tags: savedTag,
+      });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -87,9 +90,12 @@ export const updateTag = async (req, res) => {
       });
     } else {
       await updateCache(`tags:${updatedTag._id}`, updatedTag);
-      return res
-        .status(200)
-        .json({ error: false, success: true, tag: updatedTag });
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'Updated tag successfully!',
+        tag: updatedTag,
+      });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -136,11 +142,14 @@ export const deleteTag = async (req, res) => {
           }
         );
       });
-      await deleteCache(`tags:${id}`, deletedTag);
+      await deleteCache(`tags:${id}`);
       await deleteCache(`products_all*`);
-      return res
-        .status(200)
-        .json({ error: false, success: true, tag: deletedTag });
+      return res.status(200).json({
+        error: false,
+        success: true,
+        message: 'Deleted tag successfully!',
+        tag: deletedTag,
+      });
     }
   } catch (error) {
     return res.status(500).json({ message: error.message });

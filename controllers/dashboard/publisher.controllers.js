@@ -1,6 +1,8 @@
 import { redisClient } from '../../config/redis.js';
 import publisherModel from '../../models/publisher.model.js';
 import { deleteCache, updateCache } from '../../modules/cache.js';
+import adminModel from '../../models/admin.model.js';
+
 // Get All Publishers
 export const getAllPublishers = async (req, res) => {
   const admin = req.decoded;
