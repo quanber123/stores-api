@@ -6,7 +6,8 @@
   "color": "#ffffff",
   "backgroundColor": "#ca8a04",
   "__v": 0,
-  "number": 1
+  "number": 1,
+  "validRole": "user"
 },
 {
   "_id": {
@@ -16,7 +17,8 @@
   "color": "#d1fae5",
   "backgroundColor": "#065f46",
   "__v": 0,
-  "number": 3
+  "number": 3,
+  "validRole": "user"
 },
 {
   "_id": {
@@ -26,7 +28,8 @@
   "color": "#fee2e2",
   "backgroundColor": "#991b1b",
   "__v": 0,
-  "number": 4
+  "number": 4,
+  "validRole": "user"
 },
 {
   "_id": {
@@ -36,5 +39,6 @@
   "color": "#ffffff",
   "backgroundColor": "#1e40af",
   "__v": 0,
-  "number": 2
+  "number": 2,
+  "validRole": "admin"
 }]
