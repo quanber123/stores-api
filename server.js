@@ -51,7 +51,7 @@ connectRedis();
 const app = express();
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minutes
-  limit: 60,
+  limit: 100,
   handler: function (req, res) {
     res.status(429).json({
       error: true,
