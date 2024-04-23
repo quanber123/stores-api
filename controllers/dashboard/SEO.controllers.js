@@ -1,6 +1,8 @@
 import { redisClient } from '../../config/redis.js';
 import SEOModel from '../../models/SEO.model.js';
 import adminModel from '../../models/admin.model.js';
+import blogModel from '../../models/blog.model.js';
+import productModel from '../../models/product.model.js';
 import { checkCache } from '../../modules/cache.js';
 
 export const getSeo = async (req, res) => {
@@ -17,7 +19,23 @@ export const getSeo = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
-
+export const getSeoDetailsPage = async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.query;
+  try {
+    if (type === 'product') {
+      const data = await productModel.findById(
+        id,
+        'name images details.description'
+      );
+      return res.status(200).json(data);
+    }
+    if (type === 'blog') {
+      const data = await blogModel.findById(id, 'title imgSrc');
+      return res.status(200).json(data);
+    }
+  } catch (error) {}
+};
 export const setSeo = async (req, res) => {
   const admin = req.decoded;
   const { page, title, description, setIndex } = req.body;
@@ -41,7 +59,7 @@ export const setSeo = async (req, res) => {
       description: description,
       setIndex: setIndex,
       icon: files[0].path ? files[0].path : '',
-      image: files[1].path ? files[1].path : '',
+      logo: files[1].path ? files[1].path : '',
     };
     const existedPage = await SEOModel.findOne({ page: page });
     if (existedPage)

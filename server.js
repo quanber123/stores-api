@@ -109,7 +109,7 @@ async function seedBlogData() {
 //   .catch((error) => {
 //     console.error('Error seeding data:', error.message);
 //   });
-setCampaign('0 0 * * * *', checkAndUpdateCoupon);
+setCampaign('0 0 * * *', checkAndUpdateCoupon);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(router_seo);

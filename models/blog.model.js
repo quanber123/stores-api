@@ -36,6 +36,10 @@ const blogSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  type: {
+    type: String,
+    default: 'blog',
+  },
 });
 blogSchema.index({ categories: 1 });
 blogSchema.index({ tag: 1 });

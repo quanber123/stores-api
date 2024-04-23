@@ -4,6 +4,7 @@ const seoSchema = new mongoose.Schema({
   title: String,
   description: String,
   icon: String,
+  logo: String,
   setIndex: {
     type: Boolean,
     default: true,
