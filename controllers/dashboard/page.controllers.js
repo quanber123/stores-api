@@ -7,7 +7,7 @@ export const getWebsiteInfo = async (req, res) => {
     const cachedPage = await checkCache(`web_info`, async () => {
       const page = await pageModel.findOne(
         {},
-        'icon logo shopName vatNumber postCode'
+        'webId icon logo shopName vatNumber postCode'
       );
       return page;
     });

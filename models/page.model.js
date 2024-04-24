@@ -5,7 +5,7 @@ const pageSchema = new mongoose.Schema({
   logo: String,
   vatNumber: Number,
   postCode: Number,
-  shopName: Number,
+  shopName: String,
   email: String,
   app_email_password: String,
 });
