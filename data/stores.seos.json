@@ -1,36 +1,32 @@
-[{
-  "_id": {
-    "$oid": "66276c7db3a87d66f5733bd1"
+[
+  {
+    "_id": {
+      "$oid": "66276c7db3a87d66f5733bd1"
+    },
+    "page": "home",
+    "title": "COZASTORE",
+    "description": "Cửa hàng thời trang với các sản phẩm liên quan đến nam, nữ và đồ lưu niệm. Chúng tôi đem đến cho bạn những sản phẩm thời trang nhất, hiện đại nhất.",
+    "setIndex": true,
+    "__v": 0
   },
-  "page": "home",
-  "title": "COZASTORE",
-  "description": "Cửa hàng thời trang với các sản phẩm liên quan đến nam, nữ và đồ lưu niệm. Chúng tôi đem đến cho bạn những sản phẩm thời trang nhất, hiện đại nhất.",
-  "icon": "https://res.cloudinary.com/do0jrvdsz/image/upload/v1713859711/uploads/qqcqqilvjpanbcshmewz.png",
-  "logo": "https://res.cloudinary.com/do0jrvdsz/image/upload/v1713859711/uploads/mpbprpc52r7mx7y8vtho.webp",
-  "setIndex": true,
-  "__v": 0
-},
-{
-  "_id": {
-    "$oid": "66276f02ffff9fde11f0910e"
+  {
+    "_id": {
+      "$oid": "66276f02ffff9fde11f0910e"
+    },
+    "page": "shop",
+    "title": "SHOP",
+    "description": "Cửa hàng thời trang với các sản phẩm liên quan đến nam, nữ và đồ lưu niệm. Chúng tôi đem đến cho bạn những sản phẩm thời trang nhất, hiện đại nhất.",
+    "setIndex": true,
+    "__v": 0
   },
-  "page": "shop",
-  "title": "SHOP",
-  "description": "Cửa hàng thời trang với các sản phẩm liên quan đến nam, nữ và đồ lưu niệm. Chúng tôi đem đến cho bạn những sản phẩm thời trang nhất, hiện đại nhất.",
-  "icon": "https://res.cloudinary.com/do0jrvdsz/image/upload/v1713860356/uploads/yoiht1rnnhgq5w4mtege.png",
-  "logo": "https://res.cloudinary.com/do0jrvdsz/image/upload/v1713860356/uploads/zhf6masuqwkiwdtngbni.webp",
-  "setIndex": true,
-  "__v": 0
-},
-{
-  "_id": {
-    "$oid": "66276f14ffff9fde11f09118"
-  },
-  "page": "blog",
-  "title": "BLOG",
-  "description": "Cửa hàng thời trang với các sản phẩm liên quan đến nam, nữ và đồ lưu niệm. Chúng tôi đem đến cho bạn những sản phẩm thời trang nhất, hiện đại nhất.",
-  "icon": "https://res.cloudinary.com/do0jrvdsz/image/upload/v1713860374/uploads/oyjrjhfm62bfynuqblyl.png",
-  "logo": "https://res.cloudinary.com/do0jrvdsz/image/upload/v1713860374/uploads/q7j3bzxprbgtmvzkf2ek.webp",
-  "setIndex": true,
-  "__v": 0
-}]
+  {
+    "_id": {
+      "$oid": "66276f14ffff9fde11f09118"
+    },
+    "page": "blog",
+    "title": "BLOG",
+    "description": "Cửa hàng thời trang với các sản phẩm liên quan đến nam, nữ và đồ lưu niệm. Chúng tôi đem đến cho bạn những sản phẩm thời trang nhất, hiện đại nhất.",
+    "setIndex": true,
+    "__v": 0
+  }
+]
