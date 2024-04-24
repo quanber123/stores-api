@@ -45,6 +45,7 @@ import { router_tag } from './router/users/tag.router.js';
 import { router_user } from './router/users/user.router.js';
 import { router_admin } from './router/dashboard/admin.router.js';
 import { router_seo } from './router/dashboard/SEO.router.js';
+import { router_page } from './router/dashboard/page.router.js';
 config();
 connectDb();
 connectRedis();
@@ -112,6 +113,7 @@ async function seedBlogData() {
 setCampaign('0 0 * * *', checkAndUpdateCoupon);
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(router_page);
 app.use(router_seo);
 app.use(router_admin);
 app.use(router_banner_dashboard);

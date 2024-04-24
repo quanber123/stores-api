@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
 const seoSchema = new mongoose.Schema({
-  page: String,
+  page: {
+    type: String,
+    lowercase: true,
+  },
   title: String,
   description: String,
-  icon: String,
-  logo: String,
   setIndex: {
     type: Boolean,
     default: true,

@@ -5,6 +5,14 @@ import blogModel from '../../models/blog.model.js';
 import productModel from '../../models/product.model.js';
 import { checkCache } from '../../modules/cache.js';
 
+export const getSeoDashboard = async (req, res) => {
+  try {
+    const page = await SEOModel.find();
+    if (page) return res.status(200).json(page ? page : []);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
 export const getSeo = async (req, res) => {
   const { curPage } = req.params;
   try {
@@ -38,8 +46,7 @@ export const getSeoDetailsPage = async (req, res) => {
 };
 export const setSeo = async (req, res) => {
   const admin = req.decoded;
-  const { page, title, description, setIndex } = req.body;
-  const files = req.files;
+  const { page, title, description } = req.body;
   try {
     if (!page || !title || !description)
       return res
@@ -58,15 +65,13 @@ export const setSeo = async (req, res) => {
       title: title,
       description: description,
       setIndex: setIndex,
-      icon: files[0].path ? files[0].path : '',
-      logo: files[1].path ? files[1].path : '',
     };
     const existedPage = await SEOModel.findOne({ page: page });
     if (existedPage)
       return res.status(409).json({
         error: true,
         success: false,
-        message: 'Page already existed!',
+        message: 'Seo page already existed!',
       });
 
     const createdPage = await SEOModel.create(newPage);
@@ -78,10 +83,16 @@ export const setSeo = async (req, res) => {
       return res.status(201).json({
         error: false,
         success: true,
-        message: 'Created page successfully!',
+        message: 'Created Seo page successfully!',
       });
     }
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
+
+export const updateSeo = async (req, res) => {
+  const {page} = req.params
+    const admin = req.decoded;
+    const {  title, description } = req.body;
+}
