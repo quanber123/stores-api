@@ -6,6 +6,8 @@ import { deleteCache, updateCache } from '../../modules/cache.js';
 import { optimizedImg } from '../../middleware/optimizedImg.js';
 import adminModel from '../../models/admin.model.js';
 import { redisClient } from '../../config/redis.js';
+import reviewsModel from '../../models/reviews.model.js';
+import { totalPage } from '../../utils/totalPage.js';
 // Get all products
 export const dashboard_getAllProducts = async (req, res) => {
   const admin = req.decoded;
@@ -110,17 +112,6 @@ export const dashboard_getProductById = async (req, res) => {
       .findById(id)
       .populate(['details.category', 'details.tags'])
       .populate('coupon');
-    const relatedProducts = await productModel
-      .find({
-        'details.tags': { $in: [...data.details.tags] },
-        'details.category': data.details.category,
-        _id: { $ne: data._id },
-      })
-      .sort({ created_at: -1 })
-      .populate(['details.category', 'details.tags'])
-      .populate('coupon')
-      .lean()
-      .limit(8);
     if (!product) {
       return res.status(404).json({
         error: true,
@@ -131,8 +122,7 @@ export const dashboard_getProductById = async (req, res) => {
       return res.status(200).json({
         error: false,
         success: true,
-        product: data,
-        relatedProducts: relatedProducts,
+        product: product,
       });
     }
   } catch (error) {
@@ -382,7 +372,6 @@ export const getReviews = async (req, res) => {
   const admin = req.decoded;
   const { id } = req.params;
   const { page } = req.query;
-
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -421,6 +410,7 @@ export const getReviews = async (req, res) => {
       totalPage: countPage,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };

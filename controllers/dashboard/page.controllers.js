@@ -1,11 +1,11 @@
 import { redisClient } from '../../config/redis.js';
 import adminModel from '../../models/admin.model.js';
-import pageModel from '../../models/page.model.js';
+import websiteModel from '../../models/website.js';
 import { checkCache } from '../../modules/cache.js';
 export const getWebsiteInfo = async (req, res) => {
   try {
     const cachedPage = await checkCache(`web_info`, async () => {
-      const page = await pageModel.findOne(
+      const page = await websiteModel.findOne(
         {},
         'webId icon logo shopName vatNumber postCode'
       );
@@ -29,12 +29,10 @@ export const getWebsiteDashboard = async (req, res) => {
       return res
         .status(403)
         .json({ error: true, success: false, message: 'UnAuthorization!' });
-    const page = await pageModel.findOne(
-      'icon logo shopName vatNumber postCode'
-    );
-    return page;
+    const page = await websiteModel.findOne();
+    return res.status(200).json(page ? page : null);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 export const updateWebsite = async (req, res) => {
@@ -62,11 +60,13 @@ export const updateWebsite = async (req, res) => {
       email: email,
       app_email_password: app_email_password,
     };
-    if (files) {
+    if (files[0]?.path) {
       website.icon = files[0].path;
-      website.logo = files[1].path;
     }
-    const updatedWebsite = await pageModel.findOneAndUpdate(
+    if (files[1]?.path) {
+      website.logo = files[0].path;
+    }
+    const updatedWebsite = await websiteModel.findOneAndUpdate(
       { webId: id },
       {
         ...website,
@@ -81,6 +81,6 @@ export const updateWebsite = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

@@ -1,13 +1,13 @@
 import cron from 'node-cron';
 
-export const setCampaign = (time, cb) => {
+export const setCampaign = async (time, cb) => {
   const job = cron.schedule(
     time,
     async () => {
       try {
         await cb();
       } catch (error) {
-        console.error('Error running sale campaign:', error);
+        console.error('Error running campaign:', error);
       }
     },
     {
@@ -19,15 +19,15 @@ export const setCampaign = (time, cb) => {
   });
 
   job.on('run', () => {
-    console.log('Running sale campaign...');
+    console.log('Running campaign...');
   });
 
   job.on('completed', () => {
-    console.log('Sale campaign completed.');
+    console.log('Campaign completed.');
   });
 
   job.on('stopped', () => {
-    console.log('Sale campaign stopped.');
+    console.log('Campaign stopped.');
   });
 
   job.on('error', (error) => {

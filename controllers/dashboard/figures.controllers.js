@@ -139,8 +139,7 @@ export const getTotalAmount = async (req, res) => {
       amountAllSalesTime: amountAllSalesTime,
     });
   } catch (error) {
-    return res.status(500).json({ error: 'Internal server error' });
-  } finally {
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -243,7 +242,6 @@ export const getWeeklyFigures = async (req, res) => {
         },
       },
     ]);
-    console.log(totalSales);
     const totalOrders = await orderModel.aggregate([
       {
         $match: {

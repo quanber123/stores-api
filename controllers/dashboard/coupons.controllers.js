@@ -151,6 +151,7 @@ export const deleteCoupon = async (req, res) => {
   }
 };
 export const checkAndUpdateCoupon = async () => {
+  console.log('checking!!!');
   try {
     const startDay = new Date().setHours(0, 0, 0, 0);
     const endDay = new Date().setHours(23, 59, 59, 999);
@@ -166,6 +167,7 @@ export const checkAndUpdateCoupon = async () => {
           console.log(`Coupon ${coupon.id} has expired.`);
         } else {
           await updateProductsForSale(coupon);
+          console.log('updating!!!');
         }
       }
     }

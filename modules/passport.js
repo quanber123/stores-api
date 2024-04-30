@@ -3,8 +3,6 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { config } from 'dotenv';
 import oauthUserModel from '../models/oauth-user.model.js';
-import notifyModel from '../models/notify.model.js';
-import settingsModel from '../models/settings.model.js';
 config();
 const google_client_id = process.env.GOOGLE_CLIENT_ID;
 const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
@@ -24,7 +22,6 @@ passport.use(
           id: id,
         });
         if (!existedUser) {
-          const allSettingsNotify = await notifyModel.find().lean();
           const newUser = new oauthUserModel({
             id: id,
             username: emails[0]?.value || null,
@@ -34,10 +31,6 @@ passport.use(
             oauthProvider: provider,
           });
           await newUser.save();
-          await settingsModel.create({
-            user: newUser.id,
-            notifications: [...allSettingsNotify],
-          });
           return done(null, newUser);
         } else {
           return done(null, existedUser);
@@ -64,7 +57,6 @@ passport.use(
           id: id,
         });
         if (!existedUser) {
-          const allSettingsNotify = await notifyModel.find().lean();
           const newUser = new oauthUserModel({
             id: id,
             username: username || null,
@@ -74,10 +66,6 @@ passport.use(
             oauthProvider: provider,
           });
           await newUser.save();
-          await settingsModel.create({
-            user: newUser.id,
-            notifications: [...allSettingsNotify],
-          });
           return done(null, newUser);
         } else {
           return done(null, existedUser);

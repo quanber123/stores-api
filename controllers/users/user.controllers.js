@@ -4,8 +4,6 @@ import { hashPassword } from '../../utils/hashInfo.js';
 import { generateVerificationCode } from '../../utils/generateVerificationCode.js';
 import { sendVerificationEmail } from '../../utils/sendEmail.js';
 import { checkCache } from '../../modules/cache.js';
-import { redisClient } from '../../config/redis.js';
-import { optimizedImg } from '../../middleware/optimizedImg.js';
 import { updateCache } from '../../modules/cache.js';
 import authUserModel from '../../models/auth-user.model.js';
 import oauthUserModel from '../../models/oauth-user.model.js';
@@ -291,20 +289,13 @@ export const updateAvatar = async (req, res) => {
         message: `Not found user by id: ${id}`,
       });
     }
-    const optimized = await optimizedImg(file, 100, 80);
-    if (optimized) {
-      updateOptions = {
-        $set: {
-          image: `${process.env.APP_URL}/${optimized}`,
-        },
-      };
-    } else {
-      updateOptions = {
-        $set: { image: `${process.env.APP_URL}/${file.path}` },
-      };
-    }
     if (existedAuthUser) {
-      user = await authUserModel.findOneAndUpdate({ id: id }, updateOptions);
+      user = await authUserModel.findOneAndUpdate(
+        { id: id },
+        {
+          $set: { image: file.path },
+        }
+      );
       await updateCache(`users:${id}`, user);
       return res.status(200).json({
         error: false,
@@ -314,7 +305,12 @@ export const updateAvatar = async (req, res) => {
     }
 
     if (existedOauthUser) {
-      user = await oauthUserModel.findOneAndUpdate({ id: id }, updateOptions);
+      user = await oauthUserModel.findOneAndUpdate(
+        { id: id },
+        {
+          $set: { image: file.path },
+        }
+      );
       await updateCache(`users:${id}`, user);
       return res.status(200).json({
         error: false,
@@ -322,65 +318,6 @@ export const updateAvatar = async (req, res) => {
         message: 'Image updated successfully.',
       });
     }
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error.' });
-  }
-};
-
-export const getAllSettings = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const data = await checkCache(`settings:${id}`, async () => {
-      const existedSettings = await settingsModel.findOne({ user: id }).lean();
-
-      if (existedSettings) {
-        await redisClient.set(
-          `settings:${id}`,
-          JSON.stringify(existedSettings)
-        );
-        return existedSettings;
-      } else {
-        return null;
-      }
-    });
-    return res.status(200).json({
-      error: false,
-      success: true,
-      settings: data !== null ? data : {},
-    });
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error.' });
-  }
-};
-export const toggleNotifications = async (req, res) => {
-  const { user } = req.decoded;
-  const { enabled, idNotify } = req.body;
-  try {
-    const updatedSettings = await settingsModel.findOneAndUpdate(
-      { user: user.id, notifications: { $elemMatch: { _id: idNotify } } },
-      {
-        $set: { 'notifications.$.enabled': !enabled, updated_at: Date.now() },
-      },
-      {
-        new: true,
-      }
-    );
-
-    if (updatedSettings) {
-      await redisClient.set(
-        `settings:${user.id}`,
-        JSON.stringify(updatedSettings)
-      );
-      return res.status(200).json({
-        error: false,
-        success: true,
-        message: 'Updated Successfully!',
-      });
-    }
-    return res
-      .status(404)
-      .json({ error: true, success: false, message: `Updated Failed!` });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error.' });
   }

@@ -4,7 +4,6 @@ import statusOrderModel from '../../models/status.order.model.js';
 export const updateOrder = async (req, res) => {
   const { orderId } = req.params;
   const { status, userId } = req.body;
-  console.log(status);
   const admin = req.decoded;
   try {
     const auth = await adminModel.findOne({

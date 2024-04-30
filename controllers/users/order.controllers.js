@@ -1,4 +1,5 @@
 import cartModel from '../../models/cart.model.js';
+import notificationsModel from '../../models/notifications.model.js';
 import orderModel from '../../models/order.model.js';
 import productModel from '../../models/product.model.js';
 import statusModel from '../../models/status.order.model.js';
@@ -56,7 +57,7 @@ export const createTransferLink = async (req, res) => {
     }
     const body = {
       orderCode: Number(String(Date.now()).slice(-6)),
-      amount: totalPrice,
+      amount: Math.round(totalPrice),
       description: 'Payment orders',
       returnUrl: `${client_url}/success?paymentMethod=transfer`,
       cancelUrl: `${client_url}/cancel?paymentMethod=transfer`,
@@ -91,6 +92,13 @@ export const createTransferLink = async (req, res) => {
       async (p) => await cartModel.findByIdAndDelete(p._id)
     );
     await Promise.all(updatedCarts);
+    await notificationsModel.create({
+      userId: user.id,
+      itemId: createdOrders.paymentInfo.orderCode,
+      type: 'product',
+      url_client: `/account/orders/${createdOrders.paymentInfo.orderCode}`,
+      message: `You have successfully created order number <span class="font-bold">${createdOrders.paymentInfo.orderCode}</span>.`,
+    });
     return res
       .status(200)
       .json({ error: false, success: true, order: createdOrders });
@@ -162,10 +170,10 @@ export const createCashPayment = async (req, res) => {
         address: address,
         products: products.map((p) => p.product),
         orderCode: Number(String(Date.now()).slice(-6)),
-        amount: totalPrice,
+        amount: math.round(totalPrice),
         status: 'pending',
         totalPrice: products.reduce(
-          (accumulator, p) => p.product.totalPrice + accumulator,
+          (accumulator, p) => Math.round(p.product.totalPrice) + accumulator,
           0
         ),
         totalSalePrice: products.reduce(
@@ -178,6 +186,13 @@ export const createCashPayment = async (req, res) => {
       async (p) => await cartModel.findByIdAndDelete(p._id)
     );
     await Promise.all(updatedCarts);
+    await notificationsModel.create({
+      userId: user.id,
+      itemId: createdOrders.paymentInfo.orderCode,
+      type: 'product',
+      url_client: `/account/orders/${createdOrders.paymentInfo.orderCode}`,
+      message: `You have successfully created order number <span class="font-bold">${createdOrders.paymentInfo.orderCode}</span>.`,
+    });
     return res
       .status(200)
       .json({ error: false, success: true, order: createdOrders });
@@ -308,6 +323,13 @@ export const updateOrder = async (req, res) => {
 
         await Promise.all(productUpdates);
       }
+      await notificationsModel.create({
+        userId: user.id,
+        itemId: updatedOrder.paymentInfo.orderCode,
+        type: 'product',
+        url_client: `/account/orders/${updatedOrder.paymentInfo.orderCode}`,
+        message: `You have successfully updated order number <span class="font-bold">${createdOrders.paymentInfo.orderCode}</span>.`,
+      });
       return res.status(200).json({
         error: false,
         success: true,

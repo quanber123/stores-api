@@ -11,7 +11,7 @@ router.use(json());
 router.route('/api/page').get(getWebsiteInfo);
 router.route('/api/dashboard/page').get(auth, getWebsiteDashboard);
 router
-  .route('/api/page/:id')
+  .route('/api/dashboard/page/:id')
   .put(auth, uploadImg.array('images'), updateWebsite);
 
 export const router_page = router;

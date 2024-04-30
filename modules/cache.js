@@ -49,7 +49,7 @@ export const updateCache = async (key, data) => {
     return 'Cache not found!';
   }
   try {
-    await redisClient.set(k, JSON.stringify(data));
+    await redisClient.set(key, JSON.stringify(data));
     console.log('Cache updated successfully!');
     return;
   } catch (error) {

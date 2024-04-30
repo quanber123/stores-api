@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
-import pageModel from '../models/page.model.js';
+import websiteModel from '../models/website.js';
 const defaultEmail = async () => {
-  const website = await pageModel.findOne().lean();
+  const website = await websiteModel.findOne().lean();
   return website;
 };
 export const sendVerificationEmail = async (email, verificationCode) => {

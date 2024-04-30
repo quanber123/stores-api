@@ -1,8 +1,6 @@
 import {
-  getAllSettings,
   getUserByToken,
   sendCodeVerifiedAccount,
-  toggleNotifications,
   updateAvatar,
   updateProfile,
   userLogin,
@@ -33,8 +31,6 @@ router.route('/api/users/profile').put(auth, updateProfile);
 router
   .route('/api/users/:id/avatar')
   .put(auth, uploadImg.single('image'), updateAvatar);
-router.route('/api/settings/:id').get(auth, getAllSettings);
-router.route('/api/settings').put(auth, toggleNotifications);
 router
   .route('/api/users/favorites')
   .get(auth, getAllFavorites)

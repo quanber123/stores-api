@@ -25,5 +25,5 @@ router
 router
   .route('/api/dashboard/products_toggle_published/:id')
   .put(auth, publishedProduct);
-router.route('/api/dashboard/products/reviews/:id').get(getReviews);
+router.route('/api/dashboard/products/reviews/:id').get(auth, getReviews);
 export const router_product_dashboard = router;

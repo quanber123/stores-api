@@ -1,5 +1,5 @@
 import cartModel from '../../models/cart.model.js';
-// import { totalPage } from '../../utils/totalPage.js';
+import notificationsModel from '../../models/notifications.model.js';
 import productModel from '../../models/product.model.js';
 export const getAllCarts = async (req, res) => {
   const { user } = req.decoded;
@@ -73,6 +73,13 @@ export const createCart = async (req, res) => {
         existedCart.product.totalPrice =
           existedCart.product.quantity * existedCart.product.finalPrice;
         await existedCart.save();
+        await notificationsModel.create({
+          userId: user.id,
+          itemId: null,
+          type: 'cart',
+          url_client: `/cart`,
+          message: `You have successfully added product <span class='font-bold'>${existedCart.product.name}</span> to cart.`,
+        });
         return res.status(200).json({ message: 'Created Successfully!' });
       }
     }
@@ -91,11 +98,19 @@ export const createCart = async (req, res) => {
       newCart.product['finalPrice'] = cart.price;
       newCart.product['totalPrice'] = cart.price * cart.quantity;
     }
-    await cartModel.create(newCart);
-    return res.status(200).json({ message: 'Created Successfully!' });
+    const createdCart = await cartModel.create(newCart);
+    if (createdCart) {
+      await notificationsModel.create({
+        userId: user.id,
+        itemId: null,
+        type: 'cart',
+        url_client: `/cart`,
+        message: `You have successfully added product <span class='font-bold'>${createdCart.product.name}</span> to cart.`,
+      });
+      return res.status(200).json({ message: 'Created Successfully!' });
+    }
   } catch (error) {
     return res.status(500).json({ message: error.message });
-  } finally {
   }
 };
 
