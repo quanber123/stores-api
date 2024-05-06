@@ -53,7 +53,6 @@ export const createTransferLink = async (req, res) => {
         );
         await updateCache(`products:${updatedProduct._id}`, updatedProduct);
       }
-      continue;
     }
     const body = {
       orderCode: Number(String(Date.now()).slice(-6)),
