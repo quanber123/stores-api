@@ -5,10 +5,9 @@ import { checkCache } from '../../modules/cache.js';
 export const getWebsiteInfo = async (req, res) => {
   try {
     const cachedPage = await checkCache(`web_info`, async () => {
-      const page = await websiteModel.findOne(
-        {},
-        'webId icon logo shopName vatNumber postCode'
-      );
+      const page = await websiteModel
+        .findOne({}, 'webId icon logo shopName vatNumber postCode currency')
+        .populate('currency');
       return page;
     });
     if (cachedPage) return res.status(200).json(cachedPage);
@@ -29,7 +28,7 @@ export const getWebsiteDashboard = async (req, res) => {
       return res
         .status(403)
         .json({ error: true, success: false, message: 'UnAuthorization!' });
-    const page = await websiteModel.findOne();
+    const page = await websiteModel.findOne().populate('currency');
     return res.status(200).json(page ? page : null);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -38,7 +37,8 @@ export const getWebsiteDashboard = async (req, res) => {
 export const updateWebsite = async (req, res) => {
   const { id } = req.params;
   const admin = req.decoded;
-  const { vatNumber, postCode, shopName, email, app_email_password } = req.body;
+  const { vatNumber, postCode, shopName, email, app_email_password, currency } =
+    req.body;
   const files = req.files;
   try {
     if (!vatNumber || !postCode || !shopName || !email || !app_email_password)
@@ -59,6 +59,7 @@ export const updateWebsite = async (req, res) => {
       shopName: shopName,
       email: email,
       app_email_password: app_email_password,
+      currency: currency,
     };
     if (files[0]?.path) {
       website.icon = files[0].path;

@@ -2,7 +2,7 @@ import notificationsModel from '../../models/notifications.model.js';
 
 export const getNotifications = async (req, res) => {
   const { offset, limit } = req.query;
-  const { user } = req.decoded;
+  const user = req.decoded;
   try {
     const notRead = await notificationsModel.countDocuments({
       userId: user.id,
@@ -30,7 +30,7 @@ export const getNotifications = async (req, res) => {
 
 export const updateNotifications = async (req, res) => {
   const { id } = req.params;
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { read } = req.body;
   try {
     const updatedNotifications = await notificationsModel.findOneAndUpdate(
@@ -56,7 +56,7 @@ export const updateNotifications = async (req, res) => {
 
 export const deleteNotifications = async (req, res) => {
   const { id } = req.params;
-  const { user } = req.decoded;
+  const user = req.decoded;
   try {
     const deletedNotifications = await notificationsModel.findOneAndDelete({
       _id: id,

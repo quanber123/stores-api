@@ -3,7 +3,7 @@ import addressModel from '../../models/address.model.js';
 import { checkCache, deleteCache } from '../../modules/cache.js';
 
 export const getAllAddress = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   try {
     const addressData = await checkCache(`address:${user.id}`, async () => {
       const address = await addressModel
@@ -13,19 +13,17 @@ export const getAllAddress = async (req, res) => {
       return address;
     });
     if (addressData !== null)
-      return res
-        .status(200)
-        .json({
-          error: false,
-          success: true,
-          address: addressData !== null ? addressData : [],
-        });
+      return res.status(200).json({
+        error: false,
+        success: true,
+        address: addressData !== null ? addressData : [],
+      });
   } catch (error) {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
 export const createAddress = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { name, phone, state, city, district, address, isDefault } = req.body;
 
   try {
@@ -67,7 +65,7 @@ export const createAddress = async (req, res) => {
   }
 };
 export const updateAddress = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { id } = req.params;
   const { name, phone, state, city, district, address, isDefault } = req.body;
   try {
@@ -112,7 +110,7 @@ export const updateAddress = async (req, res) => {
 
 export const deleteAddress = async (req, res) => {
   const { id } = req.params;
-  const { user } = req.decoded;
+  const user = req.decoded;
   try {
     const deletedAddress = await addressModel.findOneAndDelete({
       _id: id,

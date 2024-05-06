@@ -101,7 +101,7 @@ export const getAllComments = async (req, res) => {
 };
 export const postComment = async (req, res) => {
   const { id } = req.params;
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { text } = req.body;
   try {
     let comment = {

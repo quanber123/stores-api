@@ -188,7 +188,7 @@ export const getReviews = async (req, res) => {
 };
 // Reviews Product
 export const reviewsProduct = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { rate, reviews, showUser, productId, orderId } = req.body;
   try {
     const [createdReviews, updatedOrder] = await Promise.all([

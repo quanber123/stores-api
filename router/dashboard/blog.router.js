@@ -8,7 +8,10 @@ import {
 } from '../../controllers/dashboard/blog.controllers.js';
 const router = Router();
 router.use(json());
-router.route('/api/dashboard/blogs').get(getAllBlogs).post(auth, createBlog);
-router.route(`/api/dashboard/blogs/:id`).get(getBlogById);
+router
+  .route('/api/dashboard/blogs')
+  .get(auth, getAllBlogs)
+  .post(auth, createBlog);
+router.route(`/api/dashboard/blogs/:id`).get(auth, getBlogById);
 router.route(`/api/dashboard/blogs/:id/comments`).get(auth, getAllComments);
 export const router_blog_dashboard = router;

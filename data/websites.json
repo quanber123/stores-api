@@ -7,6 +7,10 @@
     "postCode": 1003,
     "shopName": "CozaStore",
     "email": "quan01685910759@gmail.com",
-    "app_email_password": "hwcrctxtolwgjspe"
+    "app_email_password": "hwcrctxtolwgjspe",
+    "currency": {
+      "$oid": "6635daac1e18ec1b74113576"
+    },
+    "web_url": ""
   }
 ]

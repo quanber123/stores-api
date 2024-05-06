@@ -1,6 +1,8 @@
 import adminModel from '../../models/admin.model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomToken } from '../../utils/generateVerificationCode.js';
+import { redisClient } from '../../config/redis.js';
 export const getAdminByToken = async (req, res) => {
   const admin = req.decoded;
   try {
@@ -30,9 +32,15 @@ export const adminLogin = async (req, res) => {
         image: data.image,
         role: data.role,
       };
-      const token = jwt.sign(admin, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '1d',
-      });
+      // const token = jwt.sign(admin, process.env.ACCESS_TOKEN_SECRET, {
+      //   expiresIn: '1d',
+      // });
+      const token = await randomToken();
+      await redisClient.setEx(
+        `accessToken:${token}`,
+        60 * 60 * 24,
+        JSON.stringify(admin)
+      );
       return res.status(200).json({ token: token });
     }
     return res.status(403).json({ message: 'UnAuthorization!' });

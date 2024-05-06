@@ -6,7 +6,7 @@ import statusModel from '../../models/status.order.model.js';
 import { updateCache } from '../../modules/cache.js';
 import { payOs } from '../../utils/payos.js';
 export const createTransferLink = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { user_name, phone, message, address, products, totalPrice } = req.body;
   const client_url = process.env.CLIENT_URL;
   try {
@@ -109,7 +109,7 @@ export const createTransferLink = async (req, res) => {
 };
 
 export const createCashPayment = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { user_name, phone, message, address, products, totalPrice } = req.body;
   try {
     if (products.length === 0)
@@ -202,7 +202,7 @@ export const createCashPayment = async (req, res) => {
 };
 
 export const getAllOrdersUser = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { page, status } = req.query;
   let query = {};
   try {
@@ -236,7 +236,7 @@ export const getAllOrdersUser = async (req, res) => {
   }
 };
 export const getOrdersUserById = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { orderId } = req.params;
   try {
     const order = await orderModel
@@ -263,7 +263,7 @@ export const getOrdersUserById = async (req, res) => {
 };
 
 export const updateOrder = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { orderId } = req.params;
   const { status, isPaid } = req.body;
 

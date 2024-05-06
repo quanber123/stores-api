@@ -41,6 +41,7 @@ const storage = new CloudinaryStorage({
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp'], // Định dạng ảnh được chấp nhận
   },
   filename: function (req, file, cb) {
+    console.log(file);
     cb(null, file.originalname);
   },
 });

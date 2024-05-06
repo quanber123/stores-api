@@ -8,6 +8,11 @@ const websiteSchema = new mongoose.Schema({
   shopName: String,
   email: String,
   app_email_password: String,
+  web_url: String,
+  currency: {
+    type: mongoose.SchemaTypes.ObjectId,
+    ref: 'currency',
+  },
 });
 websiteSchema.indexes({ webId: 1 });
 export default mongoose.model('website', websiteSchema);

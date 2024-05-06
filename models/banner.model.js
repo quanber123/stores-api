@@ -2,9 +2,6 @@ import mongoose from 'mongoose';
 const bannerSchema = new mongoose.Schema({
   id: String,
   image: String,
-  imageLaptop: String,
-  imageTablet: String,
-  imageMobile: String,
   content: String,
   sub_content: String,
   category: {

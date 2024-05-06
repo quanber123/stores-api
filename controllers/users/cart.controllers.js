@@ -2,7 +2,7 @@ import cartModel from '../../models/cart.model.js';
 import notificationsModel from '../../models/notifications.model.js';
 import productModel from '../../models/product.model.js';
 export const getAllCarts = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   // const { currPage } = req.query;
 
   try {
@@ -22,7 +22,7 @@ export const getAllCarts = async (req, res) => {
 };
 
 export const createCart = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { cart } = req.body;
   let newCart = {
     userId: user.id,

@@ -11,7 +11,7 @@ export const getFavoritesByProduct = async (req, res) => {
   }
 };
 export const getAllFavorites = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   try {
     const total = await favoriteModel.countDocuments({ userId: user.id });
     const getFavorites = await favoriteModel
@@ -32,7 +32,7 @@ export const getAllFavorites = async (req, res) => {
 };
 
 export const postFavorites = async (req, res) => {
-  const { user } = req.decoded;
+  const user = req.decoded;
   const { productId } = req.body;
   try {
     const existedFavorites = await favoriteModel.findOne({ userId: user.id });

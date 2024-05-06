@@ -1,44 +1,28 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { hashPassword } from '../../utils/hashInfo.js';
-import { generateVerificationCode } from '../../utils/generateVerificationCode.js';
+import {
+  generateVerificationCode,
+  randomToken,
+} from '../../utils/generateVerificationCode.js';
 import { sendVerificationEmail } from '../../utils/sendEmail.js';
-import { checkCache } from '../../modules/cache.js';
 import { updateCache } from '../../modules/cache.js';
 import authUserModel from '../../models/auth-user.model.js';
 import oauthUserModel from '../../models/oauth-user.model.js';
 import settingsModel from '../../models/settings.model.js';
+import { redisClient } from '../../config/redis.js';
 //GET User by token
 export const getUserByToken = async (req, res) => {
+  const user = req.decoded;
   try {
-    const { user } = req.decoded;
-    if (!user.id) {
-      return res
-        .status(404)
-        .json({ message: `User id not found in the request` });
-    }
-    const getUser = await checkCache(`users:${user.id}`, async () => {
-      const existedOauthUser = await oauthUserModel
-        .findOne({ id: user.id })
-        .lean();
-      if (existedOauthUser !== null) {
-        return existedOauthUser;
-      }
-      const existedAuthUser = await authUserModel
-        .findOne({ id: user.id })
-        .lean();
-      return existedAuthUser;
-    });
-
-    if (getUser !== null) {
-      return res.status(200).json(getUser);
-    } else {
+    if (!user) {
       return res.status(404).json({
         error: true,
         success: false,
         message: `Not found user ${user.email}`,
       });
     }
+    return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -60,7 +44,7 @@ export const userLogin = async (req, res) => {
 
     if (!findUser)
       return res.status(404).json({ message: 'Account not register!' });
-    const match = await bcrypt.compare(password, findUser.password);
+    
     if (match) {
       const user = {
         _id: findUser._id,
@@ -71,9 +55,15 @@ export const userLogin = async (req, res) => {
         image: findUser.image,
         isVerified: findUser.isVerified,
       };
-      const token = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: process.env.DEFAULT_EXPIRATION,
-      });
+      // const token = jwt.sign({ user: user }, process.env.ACCESS_TOKEN_SECRET, {
+      //   expiresIn: Number(process.env.DEFAULT_EXPIRATION),
+      // });
+      const token = await randomToken();
+      await redisClient.setEx(
+        `accessToken:${token}`,
+        Number(process.env.DEFAULT_EXPIRATION),
+        JSON.stringify(user)
+      );
       return res.status(200).json({
         error: false,
         success: true,
@@ -164,12 +154,18 @@ export const verifiedAccount = async (req, res) => {
         image: user.image,
         isVerified: user.isVerified,
       };
-      const token = jwt.sign(
-        { user: responseUser },
-        process.env.ACCESS_TOKEN_SECRET,
-        {
-          expiresIn: process.env.DEFAULT_EXPIRATION,
-        }
+      // const token = jwt.sign(
+      //   { user: responseUser },
+      //   process.env.ACCESS_TOKEN_SECRET,
+      //   {
+      //     expiresIn: process.env.DEFAULT_EXPIRATION,
+      //   }
+      // );
+      const token = await randomToken();
+      await redisClient.setEx(
+        `accessToken:${token}`,
+        Number(process.env.DEFAULT_EXPIRATION),
+        JSON.stringify(responseUser)
       );
       return res.status(200).json({
         error: false,
@@ -270,7 +266,6 @@ export const updateProfile = async (req, res) => {
 export const updateAvatar = async (req, res) => {
   const { id } = req.params;
   const file = req.file;
-  let updateOptions;
   let user;
   try {
     if (!file) {

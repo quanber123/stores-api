@@ -3,10 +3,9 @@ import commentModel from '../../models/comment.model.js';
 import categoryModel from '../../models/category.model.js';
 import tagModel from '../../models/tag.model.js';
 import adminModel from '../../models/admin.model.js';
-import { checkCache } from '../../modules/cache.js';
 export const getAllBlogs = async (req, res) => {
   const admin = req.decoded;
-  const { category, tag, page, sort } = req.query;
+  const { category, tag, page, search } = req.query;
   try {
     const auth = await adminModel.findOne({
       email: admin.email,
@@ -17,7 +16,6 @@ export const getAllBlogs = async (req, res) => {
         .status(403)
         .json({ error: true, success: false, message: 'UnAuthorization' });
     let query = {};
-    let sortQuery = {};
     const foundCategory = category
       ? await categoryModel.findOne({ name: category })
       : '';
@@ -40,46 +38,17 @@ export const getAllBlogs = async (req, res) => {
         };
       }
     }
-    switch (sort) {
-      case '-date':
-        sortQuery = {
-          created_at: 1,
-        };
-        break;
-      case 'date':
-        sortQuery = {
-          created_at: -1,
-        };
-        break;
-      case '-price':
-        sortQuery = { price: 1 };
-        break;
-      case 'price':
-        sortQuery = { price: -1 };
-        break;
-      case 'published':
-        sortQuery = { published: -1 };
-        break;
-      case 'unpublished':
-        sortQuery = { published: 1 };
-        break;
-      default:
-        sortQuery = {
-          created_at: -1,
-        };
-        break;
-    }
-    if (search != 'null' && search) {
+    if (search != '' && search) {
       const unaccentedQueryString = unidecode(search);
       const regex = new RegExp(unaccentedQueryString, 'i');
-      query.$text = { $search: regex };
+      query.title = { $search: regex };
     }
     const totalBlogs = await blogModel.countDocuments(query);
     const total = Math.ceil(totalBlogs / 8);
     const findAllBlogs = await blogModel
       .find(query)
       .populate(['categories', 'tags'])
-      .sort(sortQuery)
+      .sort({ created_at: -1 })
       .skip((page - 1) * 8)
       .limit(8)
       .lean();
@@ -166,13 +135,11 @@ export const getAllComments = async (req, res) => {
       .findOne({ blogId: id })
       .populate('blogId');
 
-    return res
-      .status(200)
-      .json({
-        error: false,
-        success: true,
-        comment: existedComment ? existedComment : {},
-      });
+    return res.status(200).json({
+      error: false,
+      success: true,
+      comment: existedComment ? existedComment : {},
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
